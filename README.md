@@ -95,6 +95,18 @@ filx-io/
 
 ---
 
+## 🌐 Live Endpoints
+
+| Service | URL |
+|---------|-----|
+| **API (production)** | https://filx-io-production.up.railway.app |
+| **API Docs (Swagger)** | https://filx-io-production.up.railway.app/docs |
+| **Health** | https://filx-io-production.up.railway.app/health |
+| **Pricing** | https://filx-io-production.up.railway.app/api/v1/pricing |
+| **GitHub** | https://github.com/filx-io/web |
+
+---
+
 ## 🚀 Quick Start (Development)
 
 ```bash
