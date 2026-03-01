@@ -1,0 +1,48 @@
+# ── Core ─────────────────────────────────────────────────────
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+python-multipart==0.0.20
+httpx==0.28.1
+
+# ── Database ─────────────────────────────────────────────────
+sqlalchemy==2.0.36
+asyncpg==0.30.0
+psycopg2-binary==2.9.10
+alembic==1.14.0
+
+# ── Cache / Queue ────────────────────────────────────────────
+redis==5.2.1
+celery==5.4.0
+flower==2.0.1
+
+# ── Storage (Cloudflare R2 / S3) ─────────────────────────────
+boto3==1.35.88
+botocore==1.35.88
+
+# ── Validation ───────────────────────────────────────────────
+pydantic==2.10.3
+pydantic-settings==2.7.0
+email-validator==2.2.0
+
+# ── Crypto / Web3 (x402 payment verification) ────────────────
+web3==7.6.0
+eth-account==0.13.4
+
+# ── PDF Processing ───────────────────────────────────────────
+pypdf==5.1.0
+pikepdf==9.5.0
+# docling==2.x  # heavy — install separately in worker image
+
+# ── Image Processing ─────────────────────────────────────────
+Pillow==11.1.0
+# rembg==2.x    # heavy — install separately in worker image
+
+# ── OCR ──────────────────────────────────────────────────────
+# pytesseract   # requires tesseract binary
+# easyocr       # heavy — install separately in worker image
+
+# ── Monitoring ───────────────────────────────────────────────
+sentry-sdk[fastapi]==2.19.2
+
+# ── Dev ──────────────────────────────────────────────────────
+python-dotenv==1.0.1
