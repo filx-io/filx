@@ -99,10 +99,10 @@ filx-io/
 
 | Service | URL |
 |---------|-----|
-| **API (production)** | https://filx-io-production.up.railway.app |
-| **API Docs (Swagger)** | https://filx-io-production.up.railway.app/docs |
-| **Health** | https://filx-io-production.up.railway.app/health |
-| **Pricing** | https://filx-io-production.up.railway.app/api/v1/pricing |
+| **API (production)** | https://web-production-65eed.up.railway.app |
+| **API Docs (Swagger)** | https://web-production-65eed.up.railway.app/docs |
+| **Health** | https://web-production-65eed.up.railway.app/health |
+| **Pricing** | https://web-production-65eed.up.railway.app/api/v1/pricing |
 | **GitHub** | https://github.com/filx-io/web |
 
 ---
