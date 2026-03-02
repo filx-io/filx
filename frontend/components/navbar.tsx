@@ -44,13 +44,6 @@ export function Navbar() {
               Docs
             </a>
 
-            {/* Investors */}
-            <a
-              href="mailto:investors@filx.io"
-              className="font-mono text-xs text-slate-500 hover:text-slate-200 transition-colors"
-            >
-              Investors
-            </a>
 
             {/* GitHub */}
             <a
