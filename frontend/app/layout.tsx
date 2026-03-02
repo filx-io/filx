@@ -30,7 +30,7 @@ export const metadata: Metadata = {
     images: ["https://filx.io/og.png"],
   },
   robots: { index: true, follow: true },
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://filx.io"),
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://filx.io"),
 };
 
 export const viewport: Viewport = {
