@@ -9,7 +9,6 @@ import { AgentSnippet } from "@/components/agent-snippet";
 import { UseCases } from "@/components/use-cases";
 import { Integrations } from "@/components/integrations";
 import { MarketOpportunity } from "@/components/market-opportunity";
-import { PricingTable } from "@/components/pricing-table";
 import { Security } from "@/components/security";
 import { Footer } from "@/components/footer";
 
@@ -27,7 +26,6 @@ export default function HomePage() {
       <UseCases />
       <Integrations />
       <MarketOpportunity />
-      <PricingTable />
       <Security />
       <Footer />
     </main>
