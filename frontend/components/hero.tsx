@@ -62,9 +62,23 @@ export function Hero() {
           </a>
         </div>
 
+        {/* Bankr powered line */}
+        <div className="flex items-center justify-center gap-2">
+          <a
+            href="https://bankr.bot"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-[#3b82f6]/30 bg-[#3b82f6]/5 hover:bg-[#3b82f6]/10 transition-colors"
+          >
+            <span className="font-mono text-[10px] font-bold text-[#3b82f6] uppercase tracking-widest">
+              ⚡ Powered by Bankr
+            </span>
+          </a>
+        </div>
+
         {/* Subtle tag line */}
         <p className="font-mono text-xs text-slate-600 tracking-widest uppercase">
-          x402 Native · USDC on Base · Agent-First
+          Payments powered by Bankr · x402 Protocol · Base Chain
         </p>
       </div>
     </section>

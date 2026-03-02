@@ -5,6 +5,7 @@ import { HowItWorks } from "@/components/how-it-works";
 import { SupportedFormats } from "@/components/supported-formats";
 import { Features } from "@/components/features";
 import { AgentCallout } from "@/components/agent-callout";
+import { BankrIntegration } from "@/components/bankr-integration";
 import { Security } from "@/components/security";
 import { PricingTable } from "@/components/pricing-table";
 import { AgentSnippet } from "@/components/agent-snippet";
@@ -21,6 +22,7 @@ export default function HomePage() {
       <SupportedFormats />
       <Features />
       <AgentCallout />
+      <BankrIntegration />
       <Security />
       <PricingTable />
       <Footer />

@@ -12,8 +12,8 @@ export function HowItWorks() {
     },
     {
       n: "03",
-      title: "Pay with $FILX",
-      body: "Agent signs a USDC transfer on Base and resubmits with the tx hash. Fully autonomous, no human in the loop.",
+      title: "PAY VIA BANKR",
+      body: "Agent sends a natural language prompt to Bankr: 'pay 0.005 USDC to FilX'. Bankr handles wallet, signing, and submission. No private keys needed.",
     },
     {
       n: "04",

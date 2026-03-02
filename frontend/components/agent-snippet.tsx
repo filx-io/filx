@@ -7,6 +7,48 @@ import { cn } from "@/lib/utils";
 const API_URL = "https://api.filx.io";
 
 const SNIPPETS = {
+  bankr: `import httpx
+
+FILX_API = "https://api.filx.io"
+BANKR_API = "https://api.bankr.bot"
+BANKR_KEY = "your_bankr_api_key"
+
+# Step 1: Request conversion → get 402
+res = httpx.post(f"{FILX_API}/api/v1/convert", json={
+    "url": "https://example.com/document.pdf",
+    "to": "markdown"
+})
+
+if res.status_code == 402:
+    payment = res.json()["payment"]
+    job_id = res.json()["job_id"]
+
+    # Step 2: Pay via Bankr (natural language)
+    bankr_res = httpx.post(f"{BANKR_API}/agent/prompt",
+        headers={"X-API-Key": BANKR_KEY},
+        json={"prompt": f"send {payment['amount_usd']} USDC to {payment['recipient']} on base"}
+    )
+    bankr_job = bankr_res.json()["jobId"]
+
+    # Step 3: Poll Bankr for tx hash
+    import time
+    while True:
+        status = httpx.get(f"{BANKR_API}/agent/job/{bankr_job}",
+            headers={"X-API-Key": BANKR_KEY}
+        ).json()
+        if status["status"] == "completed":
+            tx_hash = extract_tx_hash(status["response"])
+            break
+        time.sleep(2)
+
+    # Step 4: Submit to FilX with payment proof
+    result = httpx.post(f"{FILX_API}/api/v1/convert",
+        json={"url": "https://example.com/document.pdf", "to": "markdown"},
+        headers={"X-Payment-Tx": tx_hash, "X-Payment-Job": job_id}
+    ).json()
+
+    print(result)  # Converted markdown`,
+
   python: `import httpx, os
 
 # Step 1: Request → get 402 with payment details
@@ -71,8 +113,15 @@ tools = [convert_file]`,
 
 type Lang = keyof typeof SNIPPETS;
 
+const TAB_LABELS: Record<Lang, string> = {
+  bankr: "Bankr",
+  python: "Python",
+  curl: "cURL",
+  langgraph: "LangGraph",
+};
+
 export function AgentSnippet() {
-  const [lang, setLang] = useState<Lang>("python");
+  const [lang, setLang] = useState<Lang>("bankr");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -108,7 +157,7 @@ export function AgentSnippet() {
                       : "border-transparent text-slate-600 hover:text-slate-400"
                   )}
                 >
-                  {l === "langgraph" ? "LangGraph" : l}
+                  {TAB_LABELS[l]}
                 </button>
               ))}
             </div>

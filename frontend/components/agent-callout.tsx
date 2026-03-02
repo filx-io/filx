@@ -34,9 +34,11 @@ export function AgentCallout() {
             <strong className="text-slate-200">AutoGPT</strong>,{" "}
             <strong className="text-slate-200">CrewAI</strong> — can convert
             files with a single API call and an{" "}
-            <strong className="text-slate-200">x402 micropayment</strong>. No
-            API keys. No accounts. No rate limits. Just{" "}
-            <strong className="text-slate-200">pay and convert</strong>.
+            <strong className="text-slate-200">x402 micropayment</strong>. Just
+            pay via{" "}
+            <strong className="text-slate-200">Bankr</strong> and convert.{" "}
+            <strong className="text-slate-200">No private keys</strong>. No API
+            keys for FilX. No rate limits.
           </p>
 
           {/* Stats */}
