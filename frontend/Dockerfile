@@ -10,7 +10,7 @@ WORKDIR /app
 # ── Dependencies ─────────────────────────────────────────────
 FROM base AS deps
 COPY package.json package-lock.json* ./
-RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
+RUN npm install
 
 # ── Builder ──────────────────────────────────────────────────
 FROM base AS builder
