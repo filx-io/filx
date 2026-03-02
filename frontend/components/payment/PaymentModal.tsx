@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAccount, useWriteContract, useWaitForTransactionReceipt } from "wagmi";
 import { parseUnits } from "viem";
 import { toast } from "sonner";
@@ -41,14 +41,19 @@ export function PaymentModal({ paymentInfo, onSuccess, onCancel }: Props) {
   });
 
   // When tx confirmed, call onSuccess
-  if (isSuccess && txHash) {
-    onSuccess(txHash);
-  }
-  if (isError && txHash) {
-    toast.error("Transaction failed on-chain. Please try again.");
-    setTxHash(undefined);
-    setIsPaying(false);
-  }
+  useEffect(() => {
+    if (isSuccess && txHash) {
+      onSuccess(txHash);
+    }
+  }, [isSuccess, txHash, onSuccess]);
+
+  useEffect(() => {
+    if (isError && txHash) {
+      toast.error("Transaction failed on-chain. Please try again.");
+      setTxHash(undefined);
+      setIsPaying(false);
+    }
+  }, [isError, txHash]);
 
   const handlePay = async () => {
     if (!address) { toast.error("Wallet not connected"); return; }

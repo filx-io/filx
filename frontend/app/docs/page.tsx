@@ -1,8 +1,14 @@
-import { redirect } from "next/navigation";
+"use client";
+import { useEffect } from "react";
 
-// Redirect to Swagger UI on the backend
 export default function DocsPage() {
-  redirect(
-    `${process.env.NEXT_PUBLIC_API_URL ?? "https://api.filx.io"}/docs`
+  useEffect(() => {
+    window.location.href = `${process.env.NEXT_PUBLIC_API_URL ?? "https://api.filx.io"}/docs`;
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-[#08090d] flex items-center justify-center font-mono text-slate-400">
+      Redirecting to API docs…
+    </div>
   );
 }

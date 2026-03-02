@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Github } from "lucide-react";
+import { Zap } from "lucide-react";
 
 export function Navbar() {
   return (
@@ -46,6 +47,15 @@ export function Navbar() {
           </div>
 
           <div className="w-px h-4 bg-white/[0.06] hidden sm:block" />
+
+          {/* Launch App link */}
+          <Link
+            href="/launch"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#3b82f6]/40 text-[#3b82f6] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#3b82f6]/10 transition-colors"
+          >
+            <Zap className="w-3 h-3" />
+            App
+          </Link>
 
           <ConnectButton
             label="Connect"

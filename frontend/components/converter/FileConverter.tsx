@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useAccount } from "wagmi";
 import { toast } from "sonner";
 import { DropZone } from "./DropZone";
@@ -112,7 +112,8 @@ export function FileConverter() {
   }, [inputMode, url, outputFormat, options, jobId, file]);
 
   // ── Step 3: Poll until done ───────────────────────────────
-  const startPolling = useCallback(async (jId: string) => {
+  // Use a ref to keep a stable reference without triggering dep warnings
+  const startPollingRef = useRef(async (jId: string) => {
     try {
       const done = await pollUntilDone(jId, (updated) => setJob(updated));
       setJob(done);
@@ -127,7 +128,8 @@ export function FileConverter() {
       setStep("error");
       toast.error("Job timed out. Please check your dashboard.");
     }
-  }, []);
+  });
+  const startPolling = startPollingRef.current;
 
   const handleReset = () => {
     setFile(null); setUrl(""); setStep("idle");
