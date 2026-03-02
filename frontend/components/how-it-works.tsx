@@ -2,23 +2,23 @@ export function HowItWorks() {
   const steps = [
     {
       n: "01",
-      title: "Upload or Link",
-      body: "Drop a file or paste a URL. PDF, images, scanned docs — any source works.",
+      title: "API Call",
+      body: "Your agent sends a POST request with a file URL and target format. One endpoint, no auth required.",
     },
     {
       n: "02",
-      title: "Choose Format",
-      body: "Markdown, JSON, CSV, PNG, WebP — pick your output format.",
+      title: "HTTP 402",
+      body: "Server returns 402 Payment Required with USDC amount, recipient address, and job ID on Base chain.",
     },
     {
       n: "03",
       title: "Pay with $FILX",
-      body: "Instant micropayment via x402 protocol on Base chain. No accounts needed.",
+      body: "Agent signs a USDC transfer on Base and resubmits with the tx hash. Fully autonomous, no human in the loop.",
     },
     {
       n: "04",
-      title: "Get Results",
-      body: "Converted file delivered in seconds. Auto-delete after 1 hour.",
+      title: "Receive Output",
+      body: "Converted file returned as JSON response. Markdown, CSV, JSON, images — ready for the next pipeline step.",
     },
   ];
 
