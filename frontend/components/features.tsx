@@ -45,7 +45,7 @@ export function Features() {
             Built Different
           </h2>
           <p className="font-mono text-slate-500 text-sm max-w-xl mx-auto">
-            Not another SaaS with API keys and rate limits. FilX is infrastructure — pay per use, own nothing, process everything.
+            Not another SaaS with API keys and rate limits. FliX is infrastructure — pay per use, own nothing, process everything.
           </p>
         </div>
 

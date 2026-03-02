@@ -7,24 +7,24 @@ import { Toaster } from "sonner";
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "FilX.io — x402 File Converter for AI Agents", template: "%s | FilX.io" },
+  title: { default: "FliX — x402 File Converter for AI Agents", template: "%s | FilX.io" },
   description:
     "Convert any file with instant USDC micropayments on Base. PDF→Markdown, OCR, Image Convert, Table Extract. Built for AI agents (MCP, LangGraph, AutoGPT, CrewAI).",
   keywords: ["file converter", "x402", "AI agents", "MCP", "USDC", "Base chain", "PDF", "OCR", "markdown"],
-  authors: [{ name: "FilX.io", url: "https://filx.io" }],
-  creator: "FilX.io",
+  authors: [{ name: "FliX", url: "https://filx.io" }],
+  creator: "FliX",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://filx.io",
-    title: "FilX.io — x402 File Converter for AI Agents",
+    title: "FliX — x402 File Converter for AI Agents",
     description: "Convert any file with instant USDC micropayments on Base.",
-    siteName: "FilX.io",
+    siteName: "FliX",
     images: [{ url: "https://filx.io/og.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "FilX.io — x402 File Converter for AI Agents",
+    title: "FliX — x402 File Converter for AI Agents",
     description: "Convert any file with instant USDC micropayments on Base.",
     creator: "@filx_io",
     images: ["https://filx.io/og.png"],

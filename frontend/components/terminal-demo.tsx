@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 
 const LINES = [
-  { text: "$ # FilX.io — x402 File Conversion", color: "text-slate-500", delay: 0 },
+  { text: "$ # FliX — x402 File Conversion", color: "text-slate-500", delay: 0 },
   { text: "$ curl -X POST https://api.filx.io/api/v1/image/resize \\", color: "text-slate-300", delay: 400 },
   { text: "    -H \"Content-Type: application/json\" \\", color: "text-slate-300", delay: 700 },
   { text: "    -d '{\"url\": \"https://example.com/photo.jpg\", \"width\": 800}'", color: "text-slate-300", delay: 1000 },

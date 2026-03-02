@@ -7,7 +7,7 @@ export function Navbar() {
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link href="/" className="font-mono font-bold text-lg text-slate-200 tracking-wider hover:text-white transition-colors">
-          <span className="text-[#3b82f6]">#</span> FILX
+          <span className="text-[#3b82f6]">#</span> FliX
         </Link>
 
         {/* Right side */}

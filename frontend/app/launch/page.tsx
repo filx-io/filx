@@ -194,7 +194,7 @@ export default function LaunchPage() {
               FX
             </div>
             <div>
-              <h1 className="text-xl font-bold text-slate-200 tracking-wide">FilX</h1>
+              <h1 className="text-xl font-bold text-slate-200 tracking-wide">FliX</h1>
               <p className="text-xs text-slate-500 uppercase tracking-widest">
                 File Conversion Infrastructure
               </p>

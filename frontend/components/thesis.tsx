@@ -28,7 +28,7 @@ export function Thesis() {
           </p>
 
           <p>
-            FilX solves this with one principle:{" "}
+            FliX solves this with one principle:{" "}
             <strong className="text-[#3b82f6]">HTTP 402</strong>. The same status code that&apos;s
             been reserved since 1997 for &ldquo;Payment Required&rdquo; — finally implemented,
             by Coinbase&apos;s x402 protocol.

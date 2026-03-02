@@ -23,10 +23,10 @@ const PAYMENT_OPTIONS = [
 ];
 
 const HOW_IT_WORKS = [
-  "Agent calls FilX API → gets HTTP 402 with payment details (amount, recipient, job_id)",
+  "Agent calls FliX API → gets HTTP 402 with payment details (amount, recipient, job_id)",
   "Agent signs and submits USDC transfer on Base (via Bankr, own wallet, or contract)",
-  "Agent resubmits to FilX with X-Payment-Tx header containing tx hash",
-  "FilX verifies on-chain payment and processes the file",
+  "Agent resubmits to FliX with X-Payment-Tx header containing tx hash",
+  "FliX verifies on-chain payment and processes the file",
   "Converted file returned as JSON — ready for the next pipeline step",
 ];
 
@@ -44,7 +44,7 @@ export function BankrIntegration() {
               No Humans Required
             </h2>
             <p className="font-mono text-slate-400 text-sm leading-relaxed max-w-2xl">
-              FilX payments are <strong className="text-slate-200">fully programmatic</strong>. 
+              FliX payments are <strong className="text-slate-200">fully programmatic</strong>. 
               No wallet popups, no browser extensions, no approval clicks. 
               Your agent pays autonomously via the{" "}
               <strong className="text-slate-200">x402 protocol</strong> — 
@@ -117,7 +117,7 @@ bankr.prompt(
 )
 # → Bankr signs + submits tx
 # → Agent gets tx_hash back
-# → Submit to FilX with proof`}</code>
+# → Submit to FliX with proof`}</code>
                 </pre>
               </div>
             </div>

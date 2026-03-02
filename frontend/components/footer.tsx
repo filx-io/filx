@@ -7,7 +7,7 @@ export function Footer() {
           {/* Left: Brand */}
           <div className="space-y-3">
             <div className="font-mono font-bold text-slate-200 text-lg tracking-wider">
-              <span className="text-[#3b82f6]">#</span> filx.io
+              <span className="text-[#3b82f6]">#</span> FliX
             </div>
             <p className="font-mono text-slate-600 text-xs leading-relaxed">
               x402 file conversion infrastructure.<br />
@@ -47,13 +47,13 @@ export function Footer() {
           <div className="space-y-3">
             <h4 className="font-mono text-[10px] text-slate-600 uppercase tracking-widest font-bold">Legal</h4>
             <p className="font-mono text-xs text-slate-600">
-              © 2025 FilX.io
+              © 2025 FliX
             </p>
             <p className="font-mono text-xs text-slate-600">
               MIT License
             </p>
             <p className="font-mono text-[10px] text-slate-700 leading-relaxed">
-              FilX is infrastructure software. Use responsibly.
+              FliX is infrastructure software. Use responsibly.
               $FILX tokens are not securities.
             </p>
           </div>

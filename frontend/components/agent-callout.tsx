@@ -24,7 +24,7 @@ export function AgentCallout() {
 
           {/* Body */}
           <p className="font-mono text-slate-400 text-sm leading-relaxed max-w-2xl">
-            FilX.io is{" "}
+            FliX is{" "}
             <strong className="text-slate-200">
               infrastructure for AI agents
             </strong>
