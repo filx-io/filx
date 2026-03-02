@@ -2,13 +2,14 @@ import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/hero";
 import { StatsBar } from "@/components/stats-bar";
 import { HowItWorks } from "@/components/how-it-works";
+import { AllTools } from "@/components/all-tools";
+import { AgentSnippet } from "@/components/agent-snippet";
 import { SupportedFormats } from "@/components/supported-formats";
 import { Features } from "@/components/features";
 import { AgentCallout } from "@/components/agent-callout";
 import { BankrIntegration } from "@/components/bankr-integration";
 import { Security } from "@/components/security";
 import { PricingTable } from "@/components/pricing-table";
-import { AgentSnippet } from "@/components/agent-snippet";
 import { Footer } from "@/components/footer";
 
 export default function HomePage() {
@@ -18,6 +19,7 @@ export default function HomePage() {
       <Hero />
       <StatsBar />
       <HowItWorks />
+      <AllTools />
       <AgentSnippet />
       <SupportedFormats />
       <Features />

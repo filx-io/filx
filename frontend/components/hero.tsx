@@ -62,23 +62,30 @@ export function Hero() {
           </a>
         </div>
 
-        {/* Bankr powered line */}
-        <div className="flex items-center justify-center gap-2">
-          <a
-            href="https://bankr.bot"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md border border-[#3b82f6]/30 bg-[#3b82f6]/5 hover:bg-[#3b82f6]/10 transition-colors"
-          >
-            <span className="font-mono text-[10px] font-bold text-[#3b82f6] uppercase tracking-widest">
-              ⚡ Powered by Bankr
-            </span>
-          </a>
+        {/* Integration partners */}
+        <div className="flex items-center justify-center gap-3 flex-wrap">
+          <span className="font-mono text-[10px] text-slate-600 uppercase tracking-widest">Integrations:</span>
+          {[
+            { label: "x402 Protocol", href: "https://x402.org" },
+            { label: "Bankr", href: "https://bankr.bot" },
+            { label: "Base Chain", href: "https://base.org" },
+            { label: "MCP", href: "https://modelcontextprotocol.io" },
+          ].map((p) => (
+            <a
+              key={p.label}
+              href={p.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-[10px] font-bold text-slate-500 hover:text-slate-300 uppercase tracking-widest transition-colors border border-white/5 rounded px-2 py-0.5"
+            >
+              {p.label}
+            </a>
+          ))}
         </div>
 
         {/* Subtle tag line */}
         <p className="font-mono text-xs text-slate-600 tracking-widest uppercase">
-          Payments powered by Bankr · x402 Protocol · Base Chain
+          x402 Protocol · Base Chain · USDC Micropayments
         </p>
       </div>
     </section>

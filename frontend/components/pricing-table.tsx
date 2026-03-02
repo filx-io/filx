@@ -15,6 +15,17 @@ const LABELS: Record<string, string> = {
   pdf_split:           "PDF Split",
   pdf_rotate:          "PDF Rotate",
   pdf_unlock:          "PDF Unlock",
+  // Image tools
+  image_resize:        "Image Resize",
+  image_compress:      "Image Compress",
+  image_crop:          "Image Crop",
+  image_upscale:       "AI Upscale",
+  image_watermark:     "Watermark",
+  image_rotate:        "Rotate / Flip",
+  // PDF → Image / conversions
+  pdf_to_image:        "PDF → Image",
+  html_to_pdf:         "HTML → PDF",
+  markdown_to_pdf:     "Markdown → PDF",
 };
 
 export function PricingTable() {

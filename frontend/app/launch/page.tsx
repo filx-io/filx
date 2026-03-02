@@ -22,7 +22,7 @@ const TOKEN_FEATURES = [
   {
     icon: Zap,
     title: "Pay-per-Convert",
-    desc: "Agents pay via Bankr wallet — no private keys needed. Natural language payments on Base chain.",
+    desc: "Agents pay via x402 micropayments — direct wallet or any Base-compatible integration. No subscriptions.",
   },
   {
     icon: ShoppingBag,
@@ -47,7 +47,7 @@ const TOKEN_FEATURES = [
   {
     icon: Rocket,
     title: "Token Launchpad",
-    desc: "Launch $FILX token via Bankr. Trading fees fund compute costs. Self-sustaining from day one.",
+    desc: "Launch $FILX token on Base. Trading fees fund compute costs. Self-sustaining from day one.",
   },
 ];
 
@@ -259,12 +259,7 @@ export default function LaunchPage() {
                 Supported Wallets
               </p>
               <div className="flex flex-wrap gap-2">
-                {/* Bankr Wallet — first position */}
-                <span className="flex items-center gap-1.5 text-xs text-blue-400 border border-blue-500/30 rounded px-2 py-1 bg-blue-500/5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-400 inline-block" />
-                  Bankr Wallet
-                </span>
-                {["MetaMask", "Coinbase", "WalletConnect", "Embedded"].map((w) => (
+                {["MetaMask", "Coinbase", "WalletConnect", "Bankr", "Embedded"].map((w) => (
                   <span
                     key={w}
                     className="flex items-center gap-1.5 text-xs text-slate-400 border border-white/5 rounded px-2 py-1 bg-[#0a0c14]"
@@ -275,16 +270,6 @@ export default function LaunchPage() {
                 ))}
               </div>
             </div>
-
-            {/* Connect with Bankr */}
-            <a
-              href="https://bankr.bot/api"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 w-full py-2.5 px-6 rounded-lg border border-[#3b82f6]/40 text-[#3b82f6] font-mono font-bold text-sm tracking-wide hover:bg-[#3b82f6]/10 transition-colors"
-            >
-              ⚡ Connect with Bankr →
-            </a>
 
             {/* Agent Setup Guide link */}
             <a
@@ -297,7 +282,7 @@ export default function LaunchPage() {
 
             {/* Footer */}
             <p className="text-xs text-slate-600 pt-2 border-t border-white/5">
-              Powered by Bankr · x402 Protocol · Base Network · USDC Settlement
+              x402 Protocol · Base Network · USDC Settlement
             </p>
           </div>
         </div>

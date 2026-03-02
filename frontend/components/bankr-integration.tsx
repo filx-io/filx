@@ -1,39 +1,39 @@
 import { ExternalLink } from "lucide-react";
 
-const HOW_IT_WORKS = [
-  "Agent calls FilX API → gets HTTP 402 with payment details",
-  'Agent sends Bankr prompt: "pay {amount} USDC to {address} on base"',
-  "Bankr signs and submits the transaction",
-  "Agent receives tx hash → submits to FilX with proof",
-  "FilX delivers the converted file",
-];
-
-const WHY_BANKR = [
+const PAYMENT_OPTIONS = [
   {
-    icon: "🔑",
-    title: "No Private Keys",
-    desc: "Agents don't touch raw keys. Bankr manages custodial wallets.",
+    icon: "💳",
+    title: "Direct Wallet",
+    desc: "Any Base-compatible wallet. Sign the tx yourself. Full self-custody.",
+    tag: "Self-Custody",
   },
   {
-    icon: "💬",
-    title: "Natural Language Payments",
-    desc: '"pay 0.005 USDC to 0x..." — that\'s it.',
+    icon: "⚡",
+    title: "Bankr",
+    desc: "Natural language payments. Agent sends a prompt, Bankr handles wallet and signing. No private keys.",
+    tag: "AI-Friendly",
+    href: "https://bankr.bot",
+  },
+  {
+    icon: "🔷",
+    title: "Coinbase Wallet",
+    desc: "Connect via Coinbase Wallet or Coinbase Smart Wallet. Gas sponsorship available.",
+    tag: "Popular",
   },
   {
     icon: "🌐",
-    title: "Cross-Chain",
-    desc: "Base, Ethereum, Polygon, Solana support.",
+    title: "WalletConnect",
+    desc: "Any WalletConnect v2 compatible wallet. 300+ wallets supported.",
+    tag: "Universal",
   },
-  {
-    icon: "⛽",
-    title: "Gas Sponsored",
-    desc: "No need to hold ETH for gas fees.",
-  },
-  {
-    icon: "🚀",
-    title: "Token Launch",
-    desc: "Launch $FILX token and earn trading fees.",
-  },
+];
+
+const HOW_IT_WORKS = [
+  "Agent calls FilX API → gets HTTP 402 with payment details",
+  "Agent pays with preferred method (direct wallet, Bankr, etc.)",
+  "Payment confirmed on Base chain",
+  "Agent submits tx hash to FilX as proof of payment",
+  "FilX delivers the converted file",
 ];
 
 export function BankrIntegration() {
@@ -45,32 +45,56 @@ export function BankrIntegration() {
           {/* Header */}
           <div className="space-y-2">
             <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold">
-              // wallet infrastructure
+              // payment options
             </p>
             <h2 className="font-mono font-black text-slate-200 text-2xl md:text-3xl uppercase tracking-wider leading-tight">
-              Powered by{" "}
-              <a
-                href="https://bankr.bot"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-[#3b82f6] hover:underline"
-              >
-                Bankr
-              </a>
+              Flexible Payment Methods
             </h2>
             <p className="font-mono text-slate-400 text-sm leading-relaxed max-w-2xl">
-              FilX uses{" "}
-              <strong className="text-slate-200">Bankr</strong> as its wallet
-              infrastructure layer. AI agents don&apos;t need to manage private
-              keys or sign transactions manually.
+              FilX uses the{" "}
+              <strong className="text-slate-200">x402 protocol</strong> for micropayments — a
+              standard HTTP 402 flow that works with any Base-compatible wallet or payment
+              integration. Choose what fits your stack.
             </p>
+          </div>
+
+          {/* Payment Options Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {PAYMENT_OPTIONS.map((opt) => (
+              <div
+                key={opt.title}
+                className="rounded-lg border border-white/10 bg-[#08090d] p-4 space-y-2"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{opt.icon}</span>
+                    <span className="font-mono font-bold text-sm text-slate-200">{opt.title}</span>
+                  </div>
+                  <span className="font-mono text-[10px] text-slate-500 border border-white/10 rounded px-1.5 py-0.5 uppercase tracking-wider">
+                    {opt.tag}
+                  </span>
+                </div>
+                <p className="font-mono text-xs text-slate-500 leading-relaxed">{opt.desc}</p>
+                {opt.href && (
+                  <a
+                    href={opt.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 font-mono text-[10px] text-[#3b82f6] hover:text-white transition-colors"
+                  >
+                    {opt.href.replace("https://", "")}
+                    <ExternalLink className="w-2.5 h-2.5" />
+                  </a>
+                )}
+              </div>
+            ))}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* How it works */}
             <div className="space-y-4">
               <h3 className="font-mono font-bold text-slate-300 text-xs uppercase tracking-widest">
-                How It Works
+                x402 Payment Flow
               </h3>
               <ol className="space-y-3">
                 {HOW_IT_WORKS.map((step, i) => (
@@ -86,83 +110,63 @@ export function BankrIntegration() {
               </ol>
             </div>
 
-            {/* Why Bankr */}
+            {/* Code snippet */}
             <div className="space-y-4">
               <h3 className="font-mono font-bold text-slate-300 text-xs uppercase tracking-widest">
-                Why Bankr?
+                Example: Direct x402
               </h3>
-              <ul className="space-y-3">
-                {WHY_BANKR.map((item) => (
-                  <li key={item.title} className="flex gap-3 items-start">
-                    <span className="flex-shrink-0 w-7 h-7 rounded-md bg-[#3b82f6]/10 border border-[#3b82f6]/20 flex items-center justify-center text-sm">
-                      {item.icon}
-                    </span>
-                    <div>
-                      <span className="font-mono font-bold text-xs text-slate-200">
-                        {item.title}
-                      </span>
-                      <span className="font-mono text-slate-500 text-xs">
-                        {" "}
-                        —{" "}
-                      </span>
-                      <span className="font-mono text-xs text-slate-400">
-                        {item.desc}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+              <div className="rounded-lg border border-white/5 bg-[#060709] p-4">
+                <p className="font-mono text-xs text-slate-500 leading-relaxed whitespace-pre">
+                  <span className="text-slate-600"># Standard x402 payment flow</span>{"\n"}
+                  <span className="text-[#3b82f6]">resp</span>
+                  <span className="text-slate-300"> = httpx.post(</span>
+                  <span className="text-green-400">&quot;/api/v1/pdf/to-markdown&quot;</span>
+                  <span className="text-slate-300">,</span>{"\n"}
+                  {"  "}
+                  <span className="text-slate-300">json={"{"}</span>
+                  <span className="text-green-400">&quot;url&quot;</span>
+                  <span className="text-slate-400">: file_url{"}"}</span>
+                  <span className="text-slate-300">)</span>{"\n"}
+                  <span className="text-slate-600"># → 402 with payment details</span>{"\n"}
+                  <span className="text-[#3b82f6]">pay</span>
+                  <span className="text-slate-300">(resp.json()</span>
+                  <span className="text-slate-400">[</span>
+                  <span className="text-green-400">&quot;payment&quot;</span>
+                  <span className="text-slate-400">]</span>
+                  <span className="text-slate-300">)</span>{"\n"}
+                  <span className="text-slate-600"># Submit any wallet tx hash</span>
+                </p>
+              </div>
             </div>
-          </div>
-
-          {/* Code snippet teaser */}
-          <div className="rounded-lg border border-white/5 bg-[#060709] p-4">
-            <p className="font-mono text-xs text-slate-500 leading-relaxed">
-              <span className="text-slate-600"># Natural language payment via Bankr</span>
-              {"\n"}
-              <span className="text-[#3b82f6]">httpx</span>
-              <span className="text-slate-300">.post(</span>
-              <span className="text-green-400">&quot;https://api.bankr.bot/agent/prompt&quot;</span>
-              <span className="text-slate-300">,</span>
-              {"\n"}
-              {"  "}
-              <span className="text-slate-300">headers=</span>
-              <span className="text-slate-400">{"{"}</span>
-              <span className="text-green-400">&quot;X-API-Key&quot;</span>
-              <span className="text-slate-400">: BANKR_KEY{"}"}</span>
-              <span className="text-slate-300">,</span>
-              {"\n"}
-              {"  "}
-              <span className="text-slate-300">json=</span>
-              <span className="text-slate-400">{"{"}</span>
-              <span className="text-green-400">&quot;prompt&quot;</span>
-              <span className="text-slate-400">: </span>
-              <span className="text-green-400">
-                &quot;send 0.005 USDC to 0xFilX on base&quot;
-              </span>
-              <span className="text-slate-400">{"}"}</span>
-              <span className="text-slate-300">)</span>
-            </p>
           </div>
 
           {/* Links */}
           <div className="flex flex-wrap gap-4 pt-2 border-t border-white/5">
             <a
-              href="https://bankr.bot"
+              href="https://x402.org"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-[#3b82f6] hover:text-white transition-colors"
+            >
+              x402.org
+              <ExternalLink className="w-3 h-3" />
+            </a>
+            <a
+              href="https://bankr.bot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors"
             >
               bankr.bot
               <ExternalLink className="w-3 h-3" />
             </a>
             <a
-              href="https://docs.bankr.bot"
+              href={`${process.env.NEXT_PUBLIC_API_URL ?? "https://api.filx.io"}/docs`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors"
             >
-              docs.bankr.bot
+              API Docs
               <ExternalLink className="w-3 h-3" />
             </a>
           </div>

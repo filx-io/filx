@@ -42,16 +42,6 @@ export function Navbar() {
               <BookOpen className="w-4 h-4" />
             </Link>
             <a
-              href="https://bankr.bot"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center w-5 h-5 rounded font-mono font-black text-[10px] text-[#3b82f6] border border-[#3b82f6]/40 hover:bg-[#3b82f6]/10 transition-colors leading-none"
-              aria-label="Bankr"
-              title="Powered by Bankr"
-            >
-              B
-            </a>
-            <a
               href="https://github.com/filx-io/web"
               target="_blank"
               rel="noopener noreferrer"

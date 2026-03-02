@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 const stats = [
-  { value: "11+", label: "Formats" },
-  { value: "<30s", label: "Avg Time" },
+  { value: "20+", label: "API Endpoints" },
+  { value: "<5s", label: "Avg Time" },
   { value: "$0.001", label: "Min Cost" },
 ];
 
@@ -32,13 +32,11 @@ export function AgentCallout() {
             <strong className="text-slate-200">MCP</strong>,{" "}
             <strong className="text-slate-200">LangGraph</strong>,{" "}
             <strong className="text-slate-200">AutoGPT</strong>,{" "}
-            <strong className="text-slate-200">CrewAI</strong> — can convert
+            <strong className="text-slate-200">CrewAI</strong> — can process
             files with a single API call and an{" "}
-            <strong className="text-slate-200">x402 micropayment</strong>. Just
-            pay via{" "}
-            <strong className="text-slate-200">Bankr</strong> and convert.{" "}
-            <strong className="text-slate-200">No private keys</strong>. No API
-            keys for FilX. No rate limits.
+            <strong className="text-slate-200">x402 micropayment</strong>.
+            20+ endpoints covering images, PDFs, OCR, and data extraction.{" "}
+            <strong className="text-slate-200">No API keys</strong>. No subscriptions. No rate limits.
           </p>
 
           {/* Stats */}
