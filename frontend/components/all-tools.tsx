@@ -21,7 +21,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/image/resize",
     desc: "Resize to exact dimensions or percentage. Smart upscale/downscale with aspect ratio preservation.",
     formats: ["PNG", "JPG", "WebP", "AVIF", "GIF", "BMP", "TIFF", "SVG"],
-    price: "50",
+    price: "$0.001",
     unit: "per image",
     category: "image",
   },
@@ -30,7 +30,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/image/compress",
     desc: "Lossy or lossless compression. Up to 80% file size reduction with minimal quality loss.",
     formats: ["PNG", "JPG", "WebP"],
-    price: "30",
+    price: "$0.001",
     unit: "per image",
     category: "image",
   },
@@ -39,7 +39,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/image/convert",
     desc: "Convert between any image formats. Batch conversion supported.",
     formats: ["PNG", "JPG", "WebP", "AVIF", "BMP", "TIFF", "GIF", "SVG", "ICO"],
-    price: "50",
+    price: "$0.001",
     unit: "per image",
     category: "image",
   },
@@ -48,7 +48,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/image/crop",
     desc: "Crop to custom dimensions, aspect ratios, or smart crop with AI-detected subject centering.",
     formats: ["PNG", "JPG", "WebP", "AVIF", "BMP", "TIFF"],
-    price: "50",
+    price: "$0.001",
     unit: "per image",
     category: "image",
   },
@@ -57,7 +57,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/image/remove-bg",
     desc: "AI-powered background removal. Returns transparent PNG. Works on photos, products, portraits.",
     formats: ["PNG", "JPG", "WebP"],
-    price: "200",
+    price: "$0.005",
     unit: "per image",
     category: "image",
   },
@@ -66,7 +66,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/image/upscale",
     desc: "AI super-resolution upscaling at 2x or 4x. Enhances detail and sharpness beyond bicubic.",
     formats: ["PNG", "JPG", "WebP"],
-    price: "300",
+    price: "$0.008",
     unit: "per image",
     category: "image",
   },
@@ -75,7 +75,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/image/watermark",
     desc: "Add text or image watermark with custom position, opacity, and rotation.",
     formats: ["PNG", "JPG", "WebP", "AVIF"],
-    price: "50",
+    price: "$0.001",
     unit: "per image",
     category: "image",
   },
@@ -84,7 +84,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/image/rotate",
     desc: "Rotate 90/180/270° or flip horizontal/vertical. Lossless for formats that support it.",
     formats: ["PNG", "JPG", "WebP", "AVIF", "BMP", "TIFF", "GIF"],
-    price: "20",
+    price: "$0.001",
     unit: "per image",
     category: "image",
   },
@@ -94,7 +94,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/pdf/to-markdown",
     desc: "High-fidelity conversion preserving headings, tables, lists, and code blocks. Ideal for RAG pipelines.",
     formats: ["PDF"],
-    price: "100",
+    price: "$0.002",
     unit: "per page",
     category: "document",
   },
@@ -103,7 +103,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/pdf/ocr",
     desc: "Extract text from scanned PDFs using OCR. Multi-language: English + Indonesian (Bahasa).",
     formats: ["PDF"],
-    price: "150",
+    price: "$0.004",
     unit: "per page",
     category: "document",
   },
@@ -112,7 +112,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/pdf/compress",
     desc: "Reduce PDF file size by optimizing images, fonts, and embedded resources inside the PDF.",
     formats: ["PDF"],
-    price: "100",
+    price: "$0.002",
     unit: "per file",
     category: "document",
   },
@@ -121,7 +121,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/pdf/merge",
     desc: "Combine multiple PDFs into a single document. Preserves bookmarks and page order.",
     formats: ["PDF"],
-    price: "100",
+    price: "$0.002",
     unit: "per job",
     category: "document",
   },
@@ -130,7 +130,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/pdf/split",
     desc: "Split a PDF by page ranges, every N pages, or at specific page boundaries.",
     formats: ["PDF"],
-    price: "100",
+    price: "$0.002",
     unit: "per job",
     category: "document",
   },
@@ -139,7 +139,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/pdf/rotate",
     desc: "Rotate individual pages or all pages of a PDF at 90, 180, or 270 degrees.",
     formats: ["PDF"],
-    price: "50",
+    price: "$0.001",
     unit: "per job",
     category: "document",
   },
@@ -148,7 +148,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/pdf/unlock",
     desc: "Remove password protection from encrypted PDFs. Returns an unlocked, accessible document.",
     formats: ["PDF"],
-    price: "100",
+    price: "$0.003",
     unit: "per file",
     category: "document",
   },
@@ -157,7 +157,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/pdf/to-image",
     desc: "Render PDF pages to high-resolution PNG or JPG images. Configurable DPI.",
     formats: ["PDF"],
-    price: "100",
+    price: "$0.002",
     unit: "per page",
     category: "document",
   },
@@ -167,8 +167,8 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/table/extract",
     desc: "Extract tables from PDFs or images to CSV or JSON. Preserves column headers and structure.",
     formats: ["PDF", "PNG", "JPG"],
-    price: "500",
-    unit: "per table",
+    price: "$0.003",
+    unit: "per page",
     category: "data",
   },
   {
@@ -176,7 +176,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/ocr/image",
     desc: "Extract text from images (photos, screenshots, scans). Returns plain text or structured JSON.",
     formats: ["PNG", "JPG", "WebP", "BMP", "TIFF"],
-    price: "150",
+    price: "$0.003",
     unit: "per image",
     category: "data",
   },
@@ -185,7 +185,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/html/to-pdf",
     desc: "Convert web pages or HTML strings to styled PDF. Supports CSS, custom fonts, and headers/footers.",
     formats: ["HTML", "URL"],
-    price: "100",
+    price: "$0.002",
     unit: "per page",
     category: "data",
   },
@@ -194,7 +194,7 @@ const TOOLS: Tool[] = [
     endpoint: "POST /api/v1/markdown/to-pdf",
     desc: "Convert Markdown to a beautifully styled PDF. Code highlighting, tables, and images supported.",
     formats: ["Markdown"],
-    price: "100",
+    price: "$0.002",
     unit: "per page",
     category: "data",
   },
@@ -215,19 +215,20 @@ const CATEGORY_TABS: { id: Category; label: string; count: number }[] = [
 
 function ToolCard({ tool }: { tool: Tool }) {
   return (
-    <div className="flex flex-col gap-3 rounded-lg border border-white/10 bg-[#0d0f17] p-4 hover:border-white/20 transition-colors">
-      {/* Name */}
+    <div className="flex flex-col gap-3 border border-white/10 bg-[#0d0f17] p-4 hover:border-white/20 transition-colors">
+      {/* Name + price */}
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-mono font-bold text-slate-200 text-sm uppercase tracking-wider leading-snug">
           {tool.name}
         </h3>
-        <span className="flex-shrink-0 font-mono font-bold text-[#3b82f6] text-sm whitespace-nowrap">
-          {tool.price} <span className="text-[10px] text-slate-500">$FILX</span>
-        </span>
+        <div className="flex-shrink-0 text-right">
+          <span className="font-mono font-bold text-[#3b82f6] text-sm">{tool.price}</span>
+          <span className="font-mono text-[10px] text-slate-500 block">{tool.unit}</span>
+        </div>
       </div>
 
       {/* Endpoint */}
-      <code className="inline-block bg-[#0a0c14] px-2 py-0.5 rounded text-xs text-blue-400 font-mono break-all leading-relaxed">
+      <code className="inline-block bg-[#0a0c14] border border-white/5 px-2 py-1 text-xs text-[#3b82f6] font-mono break-all leading-relaxed">
         {tool.endpoint}
       </code>
 
@@ -239,18 +240,11 @@ function ToolCard({ tool }: { tool: Tool }) {
         {tool.formats.map((fmt) => (
           <span
             key={fmt}
-            className="font-mono text-[10px] text-slate-400 border border-white/10 rounded px-1.5 py-0.5 bg-[#08090d]"
+            className="font-mono text-[10px] text-slate-400 border border-white/10 px-1.5 py-0.5 bg-[#08090d]"
           >
             {fmt}
           </span>
         ))}
-      </div>
-
-      {/* Unit */}
-      <div className="pt-1 border-t border-white/5">
-        <span className="font-mono text-[10px] text-slate-600 uppercase tracking-wider">
-          {tool.unit}
-        </span>
       </div>
     </div>
   );
@@ -288,7 +282,7 @@ export function AllTools() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`font-mono text-xs uppercase tracking-widest px-4 py-1.5 rounded-md border transition-colors ${
+              className={`font-mono text-xs uppercase tracking-widest px-4 py-1.5 border transition-colors ${
                 activeTab === tab.id
                   ? "border-[#3b82f6] text-[#3b82f6] bg-[#3b82f6]/10"
                   : "border-white/10 text-slate-500 hover:border-white/20 hover:text-slate-300"
@@ -309,7 +303,7 @@ export function AllTools() {
               <h3 className="font-mono font-bold text-xs text-slate-600 uppercase tracking-widest border-b border-white/5 pb-3">
                 {SECTION_LABELS[section]}
               </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {sectionTools.map((tool) => (
                   <ToolCard key={tool.endpoint} tool={tool} />
                 ))}

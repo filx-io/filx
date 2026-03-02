@@ -25,7 +25,7 @@ const PAYMENT_OPTIONS = [
 const HOW_IT_WORKS = [
   "Agent calls FliX API → gets HTTP 402 with payment details (amount, recipient, job_id)",
   "Agent signs and submits USDC transfer on Base (via Bankr, own wallet, or contract)",
-  "Agent resubmits to FliX with X-Payment-Tx header containing tx hash",
+  "Agent resubmits to FliX with PAYMENT-SIGNATURE header containing signed payload",
   "FliX verifies on-chain payment and processes the file",
   "Converted file returned as JSON — ready for the next pipeline step",
 ];
@@ -34,7 +34,7 @@ export function BankrIntegration() {
   return (
     <section className="py-20 px-4 border-t border-white/5">
       <div className="max-w-4xl mx-auto">
-        <div className="rounded-xl border border-white/10 bg-[#0d0f17] p-8 md:p-10 space-y-8">
+        <div className="border border-white/10 bg-[#0d0f17] p-8 md:p-10 space-y-8">
           {/* Header */}
           <div className="space-y-2">
             <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold">
@@ -44,10 +44,10 @@ export function BankrIntegration() {
               No Humans Required
             </h2>
             <p className="font-mono text-slate-400 text-sm leading-relaxed max-w-2xl">
-              FliX payments are <strong className="text-slate-200">fully programmatic</strong>. 
-              No wallet popups, no browser extensions, no approval clicks. 
+              FliX payments are <strong className="text-slate-200">fully programmatic</strong>.
+              No wallet popups, no browser extensions, no approval clicks.
               Your agent pays autonomously via the{" "}
-              <strong className="text-slate-200">x402 protocol</strong> — 
+              <strong className="text-slate-200">x402 protocol</strong> —
               standard HTTP 402 with on-chain USDC settlement on Base.
             </p>
           </div>
@@ -57,14 +57,14 @@ export function BankrIntegration() {
             {PAYMENT_OPTIONS.map((opt) => (
               <div
                 key={opt.title}
-                className="rounded-lg border border-white/10 bg-[#08090d] p-4 space-y-2"
+                className="border border-white/10 bg-[#08090d] p-4 space-y-2 hover:border-white/20 transition-colors"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">{opt.icon}</span>
                     <span className="font-mono font-bold text-sm text-slate-200">{opt.title}</span>
                   </div>
-                  <span className="font-mono text-[10px] text-slate-500 border border-white/10 rounded px-1.5 py-0.5 uppercase tracking-wider">
+                  <span className="font-mono text-[10px] text-slate-500 border border-white/10 px-1.5 py-0.5 uppercase tracking-wider">
                     {opt.tag}
                   </span>
                 </div>
@@ -93,7 +93,7 @@ export function BankrIntegration() {
               <ol className="space-y-3">
                 {HOW_IT_WORKS.map((step, i) => (
                   <li key={i} className="flex gap-3 items-start">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full border border-[#3b82f6] flex items-center justify-center font-mono font-black text-[10px] text-[#3b82f6] mt-0.5">
+                    <span className="flex-shrink-0 w-5 h-5 border border-[#3b82f6] flex items-center justify-center font-mono font-black text-[10px] text-[#3b82f6] mt-0.5">
                       {i + 1}
                     </span>
                     <span className="font-mono text-xs text-slate-400 leading-relaxed">
@@ -109,15 +109,16 @@ export function BankrIntegration() {
               <h3 className="font-mono font-bold text-slate-300 text-xs uppercase tracking-widest">
                 Bankr Example (Python)
               </h3>
-              <div className="rounded-lg border border-white/5 bg-[#060709] p-4 overflow-x-auto">
+              <div className="border border-white/5 bg-[#060709] p-4 overflow-x-auto">
                 <pre className="font-mono text-xs text-slate-400 leading-relaxed">
-                  <code>{`# Agent pays via Bankr — zero keys
+                  <code>{`# Agent pays via Bankr — zero keys needed
 bankr.prompt(
-  f"send {amount} USDC to {addr} on base"
+  f"send {"{amount}"} USDC to {"{addr}"} on base"
 )
-# → Bankr signs + submits tx
-# → Agent gets tx_hash back
-# → Submit to FliX with proof`}</code>
+# → Bankr signs + submits tx on Base
+# → Agent receives PAYMENT-SIGNATURE
+# → Resubmit to FliX with proof
+# → 200 OK + converted file`}</code>
                 </pre>
               </div>
             </div>
@@ -144,9 +145,7 @@ bankr.prompt(
               <ExternalLink className="w-3 h-3" />
             </a>
             <a
-              href={`${process.env.NEXT_PUBLIC_API_URL ?? "https://api.filx.io"}/docs`}
-              target="_blank"
-              rel="noopener noreferrer"
+              href="https://filx.io/docs"
               className="inline-flex items-center gap-1.5 font-mono text-xs font-bold text-slate-500 hover:text-slate-300 transition-colors"
             >
               API Docs

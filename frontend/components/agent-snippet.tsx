@@ -44,17 +44,17 @@ console.log(result);  // { content: "# Document..." }`,
 
   bankr: `import httpx
 
-FILX = "https://api.filx.io"
+API = "https://api.filx.io"
 BANKR = "https://api.bankr.bot"
 
 # Step 1: Get payment requirement
-res = httpx.post(f"{FILX}/api/v1/pdf/to-markdown",
+res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
     json={"url": "https://example.com/doc.pdf"})
 
 if res.status_code == 402:
     payment_req = res.headers["PAYMENT-REQUIRED"]
 
-    # Step 2: Sign via Bankr
+    # Step 2: Sign via Bankr (no private key needed)
     job = httpx.post(f"{BANKR}/agent/prompt",
         headers={"X-API-Key": "YOUR_KEY"},
         json={"prompt": f"sign x402 payment: {payment_req}"}
@@ -63,7 +63,7 @@ if res.status_code == 402:
     signed_payload = job["result"]["signature"]
 
     # Step 3: Resend with signed payment
-    result = httpx.post(f"{FILX}/api/v1/pdf/to-markdown",
+    result = httpx.post(f"{API}/api/v1/pdf/to-markdown",
         json={"url": "https://example.com/doc.pdf"},
         headers={"PAYMENT-SIGNATURE": signed_payload}
     ).json()
