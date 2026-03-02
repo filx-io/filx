@@ -1,6 +1,6 @@
 import axios, { type AxiosInstance } from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://web-production-65eed.up.railway.app";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.filx.io";
 
 export const api: AxiosInstance = axios.create({
   baseURL: API_URL,

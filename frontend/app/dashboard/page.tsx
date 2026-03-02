@@ -5,7 +5,7 @@ import { LayoutDashboard, FileText, Zap, Clock, Code2 } from "lucide-react";
 
 export const metadata: Metadata = { title: "Dashboard" };
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://web-production-65eed.up.railway.app";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.filx.io";
 
 export default function DashboardPage() {
   return (

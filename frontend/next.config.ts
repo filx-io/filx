@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://web-production-65eed.up.railway.app";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.filx.io";
 
 const nextConfig: NextConfig = {
   images: {

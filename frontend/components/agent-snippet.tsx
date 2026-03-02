@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_URL = "https://web-production-65eed.up.railway.app";
+const API_URL = "https://api.filx.io";
 
 const SNIPPETS = {
   python: `import httpx, os

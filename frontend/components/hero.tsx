@@ -43,7 +43,7 @@ export function Hero() {
             <ArrowRight className="w-4 h-4" />
           </Link>
           <a
-            href={`${process.env.NEXT_PUBLIC_API_URL ?? "https://web-production-65eed.up.railway.app"}/docs`}
+            href={`${process.env.NEXT_PUBLIC_API_URL ?? "https://api.filx.io"}/docs`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-2.5 rounded-md border border-white/[0.12] text-slate-300 font-mono font-semibold text-sm tracking-wide hover:border-white/25 hover:text-white transition-colors"
