@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 export function Footer() {
   return (
     <footer className="border-t border-white/[0.06] pt-12 pb-8 px-6">
@@ -6,8 +8,15 @@ export function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10 border-b border-white/[0.06]">
           {/* Left: Brand */}
           <div className="space-y-3">
-            <div className="font-mono font-bold text-slate-200 text-lg tracking-wider">
-              <span className="text-[#3b82f6]">#</span> FliX
+            <div className="flex items-center gap-2.5">
+              <Image
+                src="/assets/logo.jpg"
+                alt="FliX"
+                width={28}
+                height={28}
+                className="rounded-sm"
+              />
+              <span className="font-mono font-bold text-slate-200 text-lg tracking-wider">FliX</span>
             </div>
             <p className="font-mono text-slate-600 text-xs leading-relaxed">
               x402 file conversion infrastructure.<br />

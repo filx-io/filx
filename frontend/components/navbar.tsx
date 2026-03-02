@@ -1,12 +1,20 @@
 import { Github, BookOpen } from "lucide-react";
+import Image from "next/image";
 
 export function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#08090d]/90 backdrop-blur-md">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
         {/* Logo */}
-        <a href="https://filx.io" className="font-mono font-bold text-lg text-slate-200 tracking-wider hover:text-white transition-colors">
-          <span className="text-[#3b82f6]">#</span> FliX
+        <a href="https://filx.io" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
+          <Image
+            src="/assets/logo.jpg"
+            alt="FliX"
+            width={32}
+            height={32}
+            className="rounded-sm"
+          />
+          <span className="font-mono font-bold text-lg text-slate-200 tracking-wider">FliX</span>
         </a>
 
         {/* Right side */}
