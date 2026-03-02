@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://web-production-65eed.up.railway.app";
+
 const nextConfig: NextConfig = {
-  output: "standalone",
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "files.filx.io" },
@@ -24,7 +25,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/backend/:path*",
-        destination: `${process.env.NEXT_PUBLIC_API_URL}/api/:path*`,
+        destination: `${API_URL}/api/:path*`,
       },
     ];
   },

@@ -25,7 +25,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <RainbowKitProvider
             theme={{
               lightMode: lightTheme({ accentColor: "#0ea5e9", borderRadius: "large" }),
-              darkMode: darkTheme({ accentColor: "#0ea5e9", background: "#0f172a", borderRadius: "large" }),
+              darkMode: darkTheme({ accentColor: "#0ea5e9", borderRadius: "large" }),
             }}
             coolMode
           >
