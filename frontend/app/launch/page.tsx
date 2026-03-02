@@ -15,6 +15,7 @@ import {
   Key,
   Bot,
 } from "lucide-react";
+import { Navbar } from "@/components/navbar";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -158,6 +159,8 @@ function CopyButton({ text }: { text: string }) {
 
 export default function LaunchPage() {
   return (
+    <>
+      <Navbar />
     <main className="min-h-screen bg-[#08090d] font-mono text-slate-300">
       {/* ── A. Token Ticker Bar ── */}
       <section className="w-full bg-[#0d0f17] border-b border-white/5 py-2 px-4">
@@ -374,5 +377,6 @@ export default function LaunchPage() {
         </p>
       </section>
     </main>
+    </>
   );
 }
