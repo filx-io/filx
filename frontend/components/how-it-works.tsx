@@ -2,32 +2,45 @@ export function HowItWorks() {
   const steps = [
     {
       n: "01",
-      title: "API Call",
-      body: "Your agent sends a POST request with a file URL and target format. One endpoint, no auth required.",
+      title: "HTTP Request",
+      body: "Agent sends POST to FilX API with file URL and target format. Standard HTTP. No auth required.",
+      tag: "POST /api/v1/pdf/to-markdown",
+      tagColor: "text-[#3b82f6]",
     },
     {
       n: "02",
-      title: "HTTP 402",
-      body: "Server returns 402 Payment Required with USDC amount, recipient address, and job ID on Base chain.",
+      title: "402 Payment Required",
+      body: "FilX returns payment details: USDC amount, recipient, network (Base), scheme (exact). All in PAYMENT-REQUIRED header.",
+      tag: "← PAYMENT-REQUIRED header",
+      tagColor: "text-yellow-400",
     },
     {
       n: "03",
-      title: "PAY WITH x402",
-      body: "Agent pays via x402 protocol — direct wallet, Bankr, or any Base-compatible wallet. Submit the tx hash as proof of payment.",
+      title: "Sign & Pay",
+      body: "Agent signs USDC transfer on Base and resends request with PAYMENT-SIGNATURE header. Via Bankr, own wallet, or any signing method.",
+      tag: "→ PAYMENT-SIGNATURE header",
+      tagColor: "text-yellow-400",
     },
     {
       n: "04",
-      title: "Receive Output",
-      body: "Converted file returned as JSON response. Markdown, CSV, JSON, images — ready for the next pipeline step.",
+      title: "200 OK",
+      body: "FilX verifies payment on-chain, converts file, returns result with PAYMENT-RESPONSE header. Done.",
+      tag: "← 200 OK + PAYMENT-RESPONSE",
+      tagColor: "text-green-400",
     },
   ];
 
   return (
     <section className="py-20 px-4 border-t border-white/5">
       <div className="max-w-6xl mx-auto">
-        <h2 className="font-mono font-bold text-slate-200 text-2xl uppercase tracking-widest text-center mb-14">
-          How It Works
-        </h2>
+        <div className="text-center space-y-3 mb-14">
+          <h2 className="font-mono font-bold text-slate-200 text-2xl uppercase tracking-widest">
+            How It Works
+          </h2>
+          <p className="font-mono text-slate-500 text-sm">
+            Four HTTP exchanges. No accounts. No API keys. Pure x402.
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {steps.map((step, i) => (
@@ -52,6 +65,11 @@ export function HowItWorks() {
               </h3>
               <p className="font-mono text-slate-500 text-xs leading-relaxed">
                 {step.body}
+              </p>
+
+              {/* HTTP tag */}
+              <p className={`font-mono text-[10px] uppercase tracking-wider ${step.tagColor}`}>
+                {step.tag}
               </p>
             </div>
           ))}

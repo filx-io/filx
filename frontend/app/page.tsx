@@ -2,6 +2,7 @@ import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/hero";
 import { StatsBar } from "@/components/stats-bar";
 import { HowItWorks } from "@/components/how-it-works";
+import { X402Flow } from "@/components/x402-flow";
 import { AllTools } from "@/components/all-tools";
 import { AgentSnippet } from "@/components/agent-snippet";
 import { SupportedFormats } from "@/components/supported-formats";
@@ -19,6 +20,7 @@ export default function HomePage() {
       <Hero />
       <StatsBar />
       <HowItWorks />
+      <X402Flow />
       <AllTools />
       <AgentSnippet />
       <SupportedFormats />

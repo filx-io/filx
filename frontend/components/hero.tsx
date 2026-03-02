@@ -8,6 +8,13 @@ export function Hero() {
     <section className="py-28 px-6">
       <div className="max-w-4xl mx-auto text-center space-y-10">
 
+        {/* x402 Native badge */}
+        <div className="flex justify-center">
+          <span className="font-mono text-[10px] font-bold text-[#3b82f6] uppercase tracking-widest border border-[#3b82f6]/40 rounded-full px-4 py-1.5">
+            ✦ x402 Native · No Accounts · No API Keys
+          </span>
+        </div>
+
         {/* Main heading */}
         <div className="space-y-2">
           <h1 className="font-mono font-black text-5xl md:text-7xl tracking-widest uppercase text-slate-100 leading-none">
@@ -26,10 +33,8 @@ export function Hero() {
             with instant <strong className="text-slate-200">USDC micropayments</strong> on Base chain.
           </p>
           <p className="font-mono text-slate-500 text-sm md:text-base leading-relaxed">
-            Built for <strong className="text-slate-300">MCP</strong>,{" "}
-            <strong className="text-slate-300">LangGraph</strong>,{" "}
-            <strong className="text-slate-300">AutoGPT</strong> &amp;{" "}
-            <strong className="text-slate-300">CrewAI</strong>. One HTTP call, one micropayment, one result.
+            Powered by <strong className="text-[#3b82f6]">x402 Protocol</strong> — Coinbase&apos;s open standard for internet-native payments.
+            Agent sends request, pays, gets result. No accounts. No API keys. No friction.
           </p>
         </div>
 
@@ -85,7 +90,7 @@ export function Hero() {
 
         {/* Subtle tag line */}
         <p className="font-mono text-xs text-slate-600 tracking-widest uppercase">
-          x402 Protocol · Base Chain · USDC Micropayments
+          Built on x402 Protocol · Base Chain · USDC Micropayments
         </p>
       </div>
     </section>

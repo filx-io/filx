@@ -4,124 +4,102 @@ import { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const API_URL = "https://api.filx.io";
-
 const SNIPPETS = {
+  python: `from x402 import Client
+
+client = Client(wallet_private_key="0x...")
+
+# One-liner: x402 handles 402 → sign → retry automatically
+result = client.post(
+    "https://api.filx.io/api/v1/pdf/to-markdown",
+    json={"url": "https://example.com/document.pdf"}
+)
+print(result.json())  # {"content": "# Document..."}`,
+
+  javascript: `import { wrapFetch } from "@x402/fetch";
+import { createWalletClient, http } from "viem";
+import { privateKeyToAccount } from "viem/accounts";
+import { base } from "viem/chains";
+
+const account = privateKeyToAccount("0x...");
+const walletClient = createWalletClient({
+  account,
+  chain: base,
+  transport: http(),
+});
+
+// x402 wraps fetch: handles 402 → sign → retry automatically
+const fetchWithPayment = wrapFetch(fetch, walletClient);
+
+const res = await fetchWithPayment(
+  "https://api.filx.io/api/v1/pdf/to-markdown",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url: "https://example.com/doc.pdf" }),
+  }
+);
+const result = await res.json();
+console.log(result);  // { content: "# Document..." }`,
+
   bankr: `import httpx
 
-FILX_API = "https://api.filx.io"
-BANKR_API = "https://api.bankr.bot"
-BANKR_KEY = "your_bankr_api_key"
+FILX = "https://api.filx.io"
+BANKR = "https://api.bankr.bot"
 
-# Step 1: Request conversion → get 402
-res = httpx.post(f"{FILX_API}/api/v1/convert", json={
-    "url": "https://example.com/document.pdf",
-    "to": "markdown"
-})
+# Step 1: Get payment requirement
+res = httpx.post(f"{FILX}/api/v1/pdf/to-markdown",
+    json={"url": "https://example.com/doc.pdf"})
 
 if res.status_code == 402:
-    payment = res.json()["payment"]
-    job_id = res.json()["job_id"]
+    payment_req = res.headers["PAYMENT-REQUIRED"]
 
-    # Step 2: Pay via Bankr (natural language)
-    bankr_res = httpx.post(f"{BANKR_API}/agent/prompt",
-        headers={"X-API-Key": BANKR_KEY},
-        json={"prompt": f"send {payment['amount_usd']} USDC to {payment['recipient']} on base"}
-    )
-    bankr_job = bankr_res.json()["jobId"]
-
-    # Step 3: Poll Bankr for tx hash
-    import time
-    while True:
-        status = httpx.get(f"{BANKR_API}/agent/job/{bankr_job}",
-            headers={"X-API-Key": BANKR_KEY}
-        ).json()
-        if status["status"] == "completed":
-            tx_hash = extract_tx_hash(status["response"])
-            break
-        time.sleep(2)
-
-    # Step 4: Submit to FilX with payment proof
-    result = httpx.post(f"{FILX_API}/api/v1/convert",
-        json={"url": "https://example.com/document.pdf", "to": "markdown"},
-        headers={"X-Payment-Tx": tx_hash, "X-Payment-Job": job_id}
+    # Step 2: Sign via Bankr
+    job = httpx.post(f"{BANKR}/agent/prompt",
+        headers={"X-API-Key": "YOUR_KEY"},
+        json={"prompt": f"sign x402 payment: {payment_req}"}
     ).json()
 
-    print(result)  # Converted markdown`,
+    signed_payload = job["result"]["signature"]
 
-  python: `import httpx, os
-
-# Step 1: Request → get 402 with payment details
-res = httpx.post("${API_URL}/api/v1/convert", json={
-    "url": "https://example.com/document.pdf",
-    "to": "markdown"
-})
-
-if res.status_code == 402:
-    payment = res.json()["payment"]
-    print(f"Pay {payment['amount_usd']} USDC to {payment['recipient']}")
-    
-    # Step 2: Pay on Base chain (via your wallet/SDK)
-    tx_hash = pay_usdc(payment)  # your payment logic
-    
-    # Step 3: Submit with proof
-    result = httpx.post("${API_URL}/api/v1/convert",
-        json={"url": "https://example.com/document.pdf", "to": "markdown"},
-        headers={"X-Payment-Tx": tx_hash, "X-Payment-Job": res.json()["job_id"]}
+    # Step 3: Resend with signed payment
+    result = httpx.post(f"{FILX}/api/v1/pdf/to-markdown",
+        json={"url": "https://example.com/doc.pdf"},
+        headers={"PAYMENT-SIGNATURE": signed_payload}
     ).json()
-    
-    # Step 4: Poll for result
-    job = poll_until_done(result["job_id"])
-    print(job["result"]["content"])  # Markdown output`,
+    print(result)  # {"content": "# Document..."}`,
 
-  curl: `# Step 1: Initiate (get 402)
-curl -X POST ${API_URL}/api/v1/convert \\
+  curl: `# Step 1: Get payment requirement
+curl -i -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
   -H "Content-Type: application/json" \\
-  -d '{"url":"https://example.com/doc.pdf","to":"markdown"}'
+  -d '{"url": "https://example.com/doc.pdf"}'
+# → 402 Payment Required
+# → PAYMENT-REQUIRED: eyJ...base64...
 
-# Step 2: Pay USDC on Base (use your wallet or SDK)
-
-# Step 3: Submit with payment proof
-curl -X POST ${API_URL}/api/v1/convert \\
+# Step 2: Sign payment and resend with PAYMENT-SIGNATURE header
+curl -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
   -H "Content-Type: application/json" \\
-  -H "X-Payment-Tx: 0x{your_tx_hash}" \\
-  -H "X-Payment-Job: jb_abc123" \\
-  -d '{"url":"https://example.com/doc.pdf","to":"markdown"}'
-
-# Step 4: Check result
-curl ${API_URL}/api/v1/jobs/jb_abc123`,
-
-  langgraph: `from langchain.tools import tool
-from filx import FilXClient
-
-client = FilXClient(
-    api_url="${API_URL}",
-    wallet_private_key=os.getenv("AGENT_WALLET_KEY"),
-    network="base"
-)
-
-@tool
-def convert_file(url: str, to: str) -> dict:
-    """Convert a file using FilX.io with x402 autopayment.
-    Supports: pdf->markdown, image->text (OCR), image->png/jpg/webp
-    """
-    return client.convert(url=url, to=to)
-
-# Add to your LangGraph node
-tools = [convert_file]`,
+  -H "PAYMENT-SIGNATURE: eyJ...signed_base64..." \\
+  -d '{"url": "https://example.com/doc.pdf"}'
+# → 200 OK
+# → PAYMENT-RESPONSE: eyJ...settlement...
+# → {"content": "# Document..."}`,
 };
 
 type Lang = keyof typeof SNIPPETS;
 
 const TAB_LABELS: Record<Lang, string> = {
-  bankr: "Bankr",
   python: "Python",
+  javascript: "JavaScript",
+  bankr: "Bankr",
   curl: "cURL",
-  langgraph: "LangGraph",
 };
 
+// Ordered tab list
+const TAB_ORDER: Lang[] = ["python", "javascript", "bankr", "curl"];
+
 export function AgentSnippet() {
-  const [lang, setLang] = useState<Lang>("bankr");
+  const [lang, setLang] = useState<Lang>("python");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -138,7 +116,7 @@ export function AgentSnippet() {
             Built for AI Agents
           </h2>
           <p className="font-mono text-slate-500 text-sm">
-            Drop FilX.io into any agent framework in minutes.
+            x402 SDKs handle the full payment flow automatically. One call, one result.
           </p>
         </div>
 
@@ -146,7 +124,7 @@ export function AgentSnippet() {
           {/* Tab bar */}
           <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-4">
             <div className="flex">
-              {(Object.keys(SNIPPETS) as Lang[]).map((l) => (
+              {TAB_ORDER.map((l) => (
                 <button
                   key={l}
                   onClick={() => setLang(l)}
