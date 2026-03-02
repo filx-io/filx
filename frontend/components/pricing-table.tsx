@@ -2,7 +2,6 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { getPricing } from "@/lib/api";
-import { Zap } from "lucide-react";
 
 const LABELS: Record<string, string> = {
   pdf_to_markdown:     "PDF → Markdown",
@@ -25,55 +24,65 @@ export function PricingTable() {
   });
 
   return (
-    <section className="py-20 px-4 border-t border-border/40 bg-muted/20">
+    <section className="py-20 px-6 border-t border-white/[0.06]">
       <div className="max-w-3xl mx-auto space-y-10">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl font-black">Simple, transparent pricing</h2>
-          <p className="text-muted-foreground">
+          <h2 className="font-mono font-black text-2xl md:text-3xl uppercase tracking-widest text-slate-200">
+            Transparent Pricing
+          </h2>
+          <p className="font-mono text-slate-500 text-sm">
             Pay only for what you convert. No subscriptions. USDC on Base.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xl">
-          <div className="grid grid-cols-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider px-6 py-3 bg-muted/30 border-b border-border">
+        <div className="rounded-md border border-white/[0.06] overflow-hidden">
+          {/* Header */}
+          <div className="grid grid-cols-3 text-xs font-mono font-semibold text-slate-500 uppercase tracking-widest px-5 py-3 bg-white/[0.02] border-b border-white/[0.06]">
             <span>Operation</span>
             <span className="text-center">Price (USDC)</span>
             <span className="text-right">Unit</span>
           </div>
 
           {isLoading ? (
-            <div className="p-8 text-center text-muted-foreground animate-pulse">Loading prices…</div>
+            <div className="p-8 text-center text-slate-600 font-mono text-sm animate-pulse">
+              Loading prices…
+            </div>
           ) : (
-            <div className="divide-y divide-border">
+            <div className="divide-y divide-white/[0.04]">
               {Object.entries(pricing?.prices ?? {}).map(([key, val]) => (
-                <div key={key} className="grid grid-cols-3 items-center px-6 py-3.5 hover:bg-muted/30 transition-colors text-sm">
-                  <span className="font-medium">{LABELS[key] ?? key}</span>
-                  <span className="text-center font-mono font-bold text-primary">${val.amount}</span>
-                  <span className="text-right text-muted-foreground">{val.unit}</span>
+                <div
+                  key={key}
+                  className="grid grid-cols-3 items-center px-5 py-3 hover:bg-white/[0.02] transition-colors text-sm"
+                >
+                  <span className="font-mono text-slate-300">{LABELS[key] ?? key}</span>
+                  <span className="text-center font-mono font-bold text-[#3b82f6]">${val.amount}</span>
+                  <span className="text-right font-mono text-slate-500">{val.unit}</span>
                 </div>
               ))}
             </div>
           )}
 
           {/* Discounts */}
-          <div className="border-t border-border bg-primary/5 p-5 space-y-2">
-            <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-              <Zap className="w-4 h-4" /> Discounts
+          <div className="border-t border-white/[0.06] bg-white/[0.01] p-5 space-y-3">
+            <div className="font-mono text-xs font-semibold text-slate-400 uppercase tracking-widest">
+              Volume Discounts
             </div>
-            <div className="grid sm:grid-cols-3 gap-3 text-sm">
+            <div className="grid sm:grid-cols-3 gap-2 text-sm">
               {Object.entries(pricing?.discounts ?? {}).map(([k, v]) => (
-                <div key={k} className="flex justify-between bg-background/50 rounded-lg px-3 py-2">
-                  <span className="text-muted-foreground capitalize">{k.replace(/_/g, " ")}</span>
-                  <span className="font-bold text-green-500">{v}</span>
+                <div
+                  key={k}
+                  className="flex justify-between border border-white/[0.06] rounded-md px-3 py-2"
+                >
+                  <span className="font-mono text-slate-500 text-xs capitalize">{k.replace(/_/g, " ")}</span>
+                  <span className="font-mono font-bold text-green-400 text-xs">{v}</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        <p className="text-center text-sm text-muted-foreground">
-          All prices in USDC (6 decimals) on Base mainnet (chain ID 8453).
-          Minimum charge $0.001 per job.
+        <p className="text-center font-mono text-xs text-slate-600">
+          All prices in USDC (6 decimals) on Base mainnet (chain ID 8453). Minimum charge $0.001 per job.
         </p>
       </div>
     </section>

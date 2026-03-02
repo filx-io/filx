@@ -82,28 +82,30 @@ export function AgentSnippet() {
   };
 
   return (
-    <section className="py-20 px-4 border-t border-border/40">
+    <section className="py-20 px-6 border-t border-white/[0.06]">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-3">
-          <h2 className="text-3xl font-black">Built for AI Agents</h2>
-          <p className="text-muted-foreground text-lg">
+          <h2 className="font-mono font-black text-2xl md:text-3xl uppercase tracking-widest text-slate-200">
+            Built for AI Agents
+          </h2>
+          <p className="font-mono text-slate-500 text-sm">
             Drop FilX.io into any agent framework in minutes.
           </p>
         </div>
 
-        <div className="rounded-2xl border border-border overflow-hidden shadow-xl">
+        <div className="rounded-md border border-white/[0.06] overflow-hidden">
           {/* Tab bar */}
-          <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4">
+          <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-4">
             <div className="flex">
               {(Object.keys(SNIPPETS) as Lang[]).map((l) => (
                 <button
                   key={l}
                   onClick={() => setLang(l)}
                   className={cn(
-                    "px-4 py-3 text-sm font-medium border-b-2 transition-colors capitalize",
+                    "px-4 py-3 font-mono text-xs font-medium border-b-2 transition-colors uppercase tracking-wider",
                     lang === l
-                      ? "border-primary text-foreground"
-                      : "border-transparent text-muted-foreground hover:text-foreground"
+                      ? "border-[#3b82f6] text-slate-200"
+                      : "border-transparent text-slate-600 hover:text-slate-400"
                   )}
                 >
                   {l === "langgraph" ? "LangGraph" : l}
@@ -112,25 +114,29 @@ export function AgentSnippet() {
             </div>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors py-2 px-3 rounded-lg hover:bg-muted"
+              className="flex items-center gap-1.5 font-mono text-xs text-slate-600 hover:text-slate-300 transition-colors py-2 px-3 rounded-md hover:bg-white/[0.04]"
             >
-              {copied ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+              {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
               {copied ? "Copied!" : "Copy"}
             </button>
           </div>
 
           {/* Code */}
-          <div className="bg-[#0d1117] p-6 overflow-x-auto">
-            <pre className="text-[#e6edf3] text-sm font-mono leading-relaxed">
+          <div className="bg-[#060709] p-6 overflow-x-auto">
+            <pre className="text-[#94a3b8] text-xs font-mono leading-relaxed">
               <code>{SNIPPETS[lang]}</code>
             </pre>
           </div>
         </div>
 
-        <div className="flex flex-wrap justify-center gap-3 text-sm text-muted-foreground">
+        {/* Compatible frameworks */}
+        <div className="flex flex-wrap justify-center gap-2">
           {["MCP", "LangGraph", "AutoGPT", "CrewAI", "OpenAI Functions", "Raw HTTP"].map((f) => (
-            <span key={f} className="px-3 py-1 rounded-full border border-border bg-muted/50">
-              ✅ {f}
+            <span
+              key={f}
+              className="font-mono text-xs text-slate-500 px-3 py-1 rounded-md border border-white/[0.06]"
+            >
+              {f}
             </span>
           ))}
         </div>

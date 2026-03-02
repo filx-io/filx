@@ -85,68 +85,68 @@ export function PaymentModal({ paymentInfo, onSuccess, onCancel }: Props) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Overlay */}
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
         onClick={!isPaying ? onCancel : undefined}
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-card border border-border rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-md bg-[#0c0d12] border border-white/[0.08] rounded-md overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-5 border-b border-white/[0.06]">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg filx-gradient flex items-center justify-center">
-              <Zap className="w-4 h-4 text-white" />
+            <div className="w-8 h-8 rounded-md border border-white/[0.08] flex items-center justify-center">
+              <Zap className="w-4 h-4 text-[#3b82f6]" />
             </div>
             <div>
-              <h3 className="font-bold text-lg">Payment Required</h3>
-              <p className="text-xs text-muted-foreground">x402 Protocol · Base Chain</p>
+              <h3 className="font-mono font-bold text-slate-200 text-sm tracking-wide">Payment Required</h3>
+              <p className="font-mono text-xs text-slate-500">x402 Protocol · Base Chain</p>
             </div>
           </div>
           {!isPaying && (
-            <button onClick={onCancel} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
+            <button onClick={onCancel} className="p-1.5 rounded-md hover:bg-white/[0.04] transition-colors text-slate-500 hover:text-slate-300">
               <X className="w-4 h-4" />
             </button>
           )}
         </div>
 
         {/* Amount */}
-        <div className="p-6 space-y-6">
+        <div className="p-5 space-y-5">
           <div className="text-center space-y-1">
-            <div className="text-5xl font-black filx-gradient-text">
+            <div className="font-mono font-black text-5xl text-[#3b82f6]">
               ${paymentInfo.payment.amount_usd}
             </div>
-            <div className="text-muted-foreground text-sm">
+            <div className="font-mono text-slate-500 text-xs">
               USDC on Base · Job #{paymentInfo.job_id.slice(-8)}
             </div>
           </div>
 
           {/* Estimate */}
           {paymentInfo.estimate && (
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-3 gap-2">
               {paymentInfo.estimate.pages && (
-                <div className="text-center p-3 rounded-xl bg-muted/50">
-                  <div className="font-bold">{paymentInfo.estimate.pages}</div>
-                  <div className="text-xs text-muted-foreground">pages</div>
+                <div className="text-center p-3 rounded-md border border-white/[0.06]">
+                  <div className="font-mono font-bold text-slate-200">{paymentInfo.estimate.pages}</div>
+                  <div className="font-mono text-xs text-slate-500">pages</div>
                 </div>
               )}
               {paymentInfo.estimate.size_mb && (
-                <div className="text-center p-3 rounded-xl bg-muted/50">
-                  <div className="font-bold">{paymentInfo.estimate.size_mb.toFixed(1)}</div>
-                  <div className="text-xs text-muted-foreground">MB</div>
+                <div className="text-center p-3 rounded-md border border-white/[0.06]">
+                  <div className="font-mono font-bold text-slate-200">{paymentInfo.estimate.size_mb.toFixed(1)}</div>
+                  <div className="font-mono text-xs text-slate-500">MB</div>
                 </div>
               )}
               {paymentInfo.estimate.duration_seconds && (
-                <div className="text-center p-3 rounded-xl bg-muted/50">
-                  <div className="font-bold">~{paymentInfo.estimate.duration_seconds}s</div>
-                  <div className="text-xs text-muted-foreground">est. time</div>
+                <div className="text-center p-3 rounded-md border border-white/[0.06]">
+                  <div className="font-mono font-bold text-slate-200">~{paymentInfo.estimate.duration_seconds}s</div>
+                  <div className="font-mono text-xs text-slate-500">est. time</div>
                 </div>
               )}
             </div>
           )}
 
           {/* Security note */}
-          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-muted/30 text-sm text-muted-foreground">
-            <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 text-green-500" />
+          <div className="flex items-start gap-2.5 p-3 rounded-md border border-white/[0.06] font-mono text-xs text-slate-500">
+            <ShieldCheck className="w-4 h-4 mt-0.5 shrink-0 text-green-400" />
             <p>Payment goes directly on-chain. FilX.io cannot access your wallet beyond this transaction.</p>
           </div>
 
@@ -154,22 +154,22 @@ export function PaymentModal({ paymentInfo, onSuccess, onCancel }: Props) {
           <button
             onClick={handlePay}
             disabled={isPaying}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl filx-gradient text-white font-bold text-base
-              hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed shadow-lg"
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-md bg-[#3b82f6] text-white font-mono font-bold text-sm
+              hover:bg-[#2563eb] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isWaiting ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Confirming on Base…
               </>
             ) : isPaying ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
                 Check your wallet…
               </>
             ) : (
               <>
-                <Zap className="w-5 h-5" />
+                <Zap className="w-4 h-4" />
                 Pay ${paymentInfo.payment.amount_usd} USDC
               </>
             )}
@@ -180,7 +180,7 @@ export function PaymentModal({ paymentInfo, onSuccess, onCancel }: Props) {
               href={`https://basescan.org/tx/${txHash}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              className="flex items-center justify-center gap-1.5 font-mono text-xs text-slate-600 hover:text-slate-400 transition-colors"
             >
               View on BaseScan <ExternalLink className="w-3 h-3" />
             </a>

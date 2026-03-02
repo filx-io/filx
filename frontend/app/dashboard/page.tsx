@@ -26,7 +26,7 @@ export default function DashboardPage() {
             { icon: Zap,      label: "Total Spent",       value: "—",    sub: "USDC on Base" },
             { icon: Clock,    label: "Avg. Time",         value: "<30s", sub: "per conversion" },
           ].map(({ icon: Icon, label, value, sub }) => (
-            <div key={label} className="rounded-2xl border border-border bg-card p-5 space-y-2">
+            <div key={label} className="rounded-md border border-white/[0.06] bg-white/[0.02] p-5 space-y-2">
               <div className="flex items-center gap-2 text-muted-foreground text-sm">
                 <Icon className="w-4 h-4" /> {label}
               </div>
@@ -37,7 +37,7 @@ export default function DashboardPage() {
         </div>
 
         {/* API Reference */}
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="rounded-md border border-white/[0.06] bg-white/[0.02] overflow-hidden">
           <div className="flex items-center gap-2 p-5 border-b border-border">
             <Code2 className="w-5 h-5 text-primary" />
             <h2 className="font-semibold">API Reference</h2>
@@ -78,7 +78,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Job history placeholder */}
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="rounded-md border border-white/[0.06] bg-white/[0.02] overflow-hidden">
           <div className="flex items-center gap-2 p-5 border-b border-border">
             <Clock className="w-5 h-5 text-primary" />
             <h2 className="font-semibold">Recent Jobs</h2>

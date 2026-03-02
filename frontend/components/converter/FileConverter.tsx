@@ -138,7 +138,7 @@ export function FileConverter() {
     <div className="space-y-4">
       {/* ── Input section ── */}
       {(step === "idle" || step === "ready") && (
-        <div className="rounded-2xl border border-border bg-card shadow-xl overflow-hidden">
+        <div className="rounded-md border border-white/[0.06] bg-[#0a0b0f] overflow-hidden">
           {/* Input mode tabs */}
           <Tabs
             value={inputMode}
@@ -211,7 +211,7 @@ export function FileConverter() {
       )}
 
       {step === "error" && (
-        <div className="rounded-2xl border border-destructive/40 bg-destructive/10 p-6 text-center space-y-3">
+        <div className="rounded-md border border-red-900/40 bg-red-950/20 p-6 text-center space-y-3">
           <p className="text-destructive font-medium">Conversion failed</p>
           <p className="text-sm text-muted-foreground">{job?.error ?? "Unknown error occurred"}</p>
           <button

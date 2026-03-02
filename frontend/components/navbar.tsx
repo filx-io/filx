@@ -2,47 +2,45 @@
 
 import Link from "next/link";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { FileText, LayoutDashboard, BookOpen, Twitter } from "lucide-react";
-import { ThemeToggle } from "./theme-toggle";
+import { Twitter, Github } from "lucide-react";
 
 export function Navbar() {
   return (
-    <header className="sticky top-0 z-50 border-b border-border/40 bg-background/80 backdrop-blur-xl">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+    <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#08090d]/90 backdrop-blur-md">
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 font-bold text-xl shrink-0">
-          <span className="flex items-center justify-center w-8 h-8 rounded-lg filx-gradient text-white font-black text-sm">
-            FX
-          </span>
-          <span className="filx-gradient-text">FilX.io</span>
+        <Link href="/" className="font-mono font-bold text-lg text-slate-200 tracking-wider hover:text-white transition-colors">
+          <span className="text-[#3b82f6]">#</span> FILX
         </Link>
 
-        {/* Nav links */}
-        <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-          <Link href="/#convert" className="hover:text-foreground transition-colors flex items-center gap-1.5">
-            <FileText className="w-4 h-4" /> Convert
-          </Link>
-          <Link href="/dashboard" className="hover:text-foreground transition-colors flex items-center gap-1.5">
-            <LayoutDashboard className="w-4 h-4" /> Dashboard
-          </Link>
-          <Link href="/docs" className="hover:text-foreground transition-colors flex items-center gap-1.5">
-            <BookOpen className="w-4 h-4" /> Docs
-          </Link>
-          <a
-            href="https://twitter.com/filx_io"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-foreground transition-colors flex items-center gap-1.5"
-          >
-            <Twitter className="w-4 h-4" /> @filx_io
-          </a>
-        </nav>
-
         {/* Right side */}
-        <div className="flex items-center gap-3">
-          <ThemeToggle />
+        <div className="flex items-center gap-4">
+          {/* Social icons */}
+          <div className="hidden sm:flex items-center gap-3">
+            <a
+              href="https://twitter.com/filx_io"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-500 hover:text-slate-200 transition-colors"
+              aria-label="Twitter / X"
+            >
+              <Twitter className="w-4 h-4" />
+            </a>
+            <a
+              href="https://github.com/filx-io/web"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-500 hover:text-slate-200 transition-colors"
+              aria-label="GitHub"
+            >
+              <Github className="w-4 h-4" />
+            </a>
+          </div>
+
+          <div className="w-px h-4 bg-white/[0.06] hidden sm:block" />
+
           <ConnectButton
-            label="Connect Wallet"
+            label="Connect"
             accountStatus="avatar"
             chainStatus="icon"
             showBalance={false}
