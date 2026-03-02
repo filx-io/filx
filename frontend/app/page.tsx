@@ -7,8 +7,6 @@ import { AllTools } from "@/components/all-tools";
 import { AgentSnippet } from "@/components/agent-snippet";
 import { UseCases } from "@/components/use-cases";
 import { Integrations } from "@/components/integrations";
-import { Tokenomics } from "@/components/tokenomics";
-import { Roadmap } from "@/components/roadmap";
 import { PricingTable } from "@/components/pricing-table";
 import { Security } from "@/components/security";
 import { Footer } from "@/components/footer";
@@ -25,8 +23,6 @@ export default function HomePage() {
       <AgentSnippet />
       <UseCases />
       <Integrations />
-      <Tokenomics />
-      <Roadmap />
       <PricingTable />
       <Security />
       <Footer />
