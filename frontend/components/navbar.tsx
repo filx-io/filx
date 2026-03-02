@@ -56,7 +56,7 @@ export function Navbar() {
 
           {/* Launch App link */}
           <Link
-            href="/launch"
+            href="https://app.filx.io"
             className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#3b82f6]/40 text-[#3b82f6] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#3b82f6]/10 transition-colors"
           >
             <Zap className="w-3 h-3" />
