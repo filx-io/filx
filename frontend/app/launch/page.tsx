@@ -173,7 +173,7 @@ export default function LaunchPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
               <a
-                href="https://api.filx.io/docs"
+                href="https://filx.io/docs"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#3b82f6] text-white font-mono font-semibold text-sm tracking-wide hover:bg-[#2563eb] transition-colors"
@@ -282,7 +282,7 @@ export default function LaunchPage() {
               <div className="border-t border-white/[0.06] px-4 py-3 flex justify-between items-center">
                 <span className="font-mono text-[10px] text-slate-600">All prices in USDC · Base mainnet</span>
                 <a
-                  href="https://api.filx.io/docs"
+                  href="https://filx.io/docs"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="font-mono text-[10px] text-[#3b82f6] hover:text-white transition-colors flex items-center gap-1"

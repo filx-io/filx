@@ -32,7 +32,7 @@ export function Footer() {
             <h4 className="font-mono text-[10px] text-slate-600 uppercase tracking-widest font-bold">Links</h4>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { label: "Docs", href: "https://api.filx.io/docs" },
+                { label: "Docs", href: "https://filx.io/docs" },
                 { label: "GitHub", href: "https://github.com/filx-io/web" },
                 { label: "X / Twitter", href: "https://x.com/filx_io" },
                 { label: "API Status", href: "https://status.filx.io" },

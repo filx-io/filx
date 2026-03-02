@@ -96,7 +96,7 @@ export function MarketOpportunity() {
               <ArrowRight className="w-4 h-4" />
             </a>
             <a
-              href="https://api.filx.io/docs"
+              href="https://filx.io/docs"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center gap-2 px-6 py-3 border border-white/10 text-slate-300 font-mono font-semibold text-sm tracking-wide hover:border-white/25 hover:text-white transition-colors"
