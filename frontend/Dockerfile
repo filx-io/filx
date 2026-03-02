@@ -10,7 +10,7 @@ WORKDIR /app
 # ── Dependencies ─────────────────────────────────────────────
 FROM base AS deps
 COPY package.json package-lock.json* ./
-RUN npm install
+RUN npm ci
 
 # ── Builder ──────────────────────────────────────────────────
 FROM base AS builder
@@ -34,7 +34,7 @@ ENV NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID=$NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+RUN npm run build && ls -la .next/standalone/server.js
 
 # ── Runner ───────────────────────────────────────────────────
 FROM base AS runner
