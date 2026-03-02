@@ -45,16 +45,24 @@ export function Footer() {
 
           {/* Right: License + legal */}
           <div className="space-y-3">
-            <h4 className="font-mono text-[10px] text-slate-600 uppercase tracking-widest font-bold">Legal</h4>
-            <p className="font-mono text-xs text-slate-600">
-              © 2025 FliX
-            </p>
-            <p className="font-mono text-xs text-slate-600">
-              MIT License
+            <h4 className="font-mono text-[10px] text-slate-600 uppercase tracking-widest font-bold">Contact</h4>
+            <a
+              href="mailto:investors@filx.io"
+              className="font-mono text-xs text-slate-500 hover:text-slate-200 transition-colors block"
+            >
+              investors@filx.io
+            </a>
+            <a
+              href="mailto:hello@filx.io"
+              className="font-mono text-xs text-slate-500 hover:text-slate-200 transition-colors block"
+            >
+              hello@filx.io
+            </a>
+            <p className="font-mono text-xs text-slate-600 pt-2">
+              © 2026 FliX · MIT License
             </p>
             <p className="font-mono text-[10px] text-slate-700 leading-relaxed">
               FliX is infrastructure software. Use responsibly.
-              $FILX tokens are not securities.
             </p>
           </div>
         </div>

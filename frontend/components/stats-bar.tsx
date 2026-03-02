@@ -1,7 +1,7 @@
 const stats = [
-  { value: "1,200+", label: "Agents Trusting FilX" },
-  { value: "48,900+", label: "Files Converted" },
-  { value: "$2,340+", label: "USDC Processed" },
+  { value: "1,200+", label: "Agents Served" },
+  { value: "48,900+", label: "Files Processed" },
+  { value: "$2,340+", label: "USDC Settled On-Chain" },
 ];
 
 export function StatsBar() {
