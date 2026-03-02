@@ -2,64 +2,58 @@ import { ExternalLink } from "lucide-react";
 
 const PAYMENT_OPTIONS = [
   {
-    icon: "💳",
-    title: "Direct Wallet",
-    desc: "Any Base-compatible wallet. Sign the tx yourself. Full self-custody.",
-    tag: "Self-Custody",
-  },
-  {
     icon: "⚡",
-    title: "Bankr",
-    desc: "Natural language payments. Agent sends a prompt, Bankr handles wallet and signing. No private keys.",
-    tag: "AI-Friendly",
+    title: "Bankr Agent API",
+    desc: "Natural language payments. Agent sends a prompt to Bankr: 'pay 0.005 USDC to 0x…' — Bankr handles wallet, signing, and gas. Fully autonomous.",
+    tag: "Recommended",
     href: "https://bankr.bot",
   },
   {
-    icon: "🔷",
-    title: "Coinbase Wallet",
-    desc: "Connect via Coinbase Wallet or Coinbase Smart Wallet. Gas sponsorship available.",
-    tag: "Popular",
+    icon: "🤖",
+    title: "Programmatic Wallet",
+    desc: "Agent holds its own private key and signs USDC transfers directly via ethers.js, viem, or web3.py. Full self-custody, zero dependencies.",
+    tag: "Self-Custody",
   },
   {
-    icon: "🌐",
-    title: "WalletConnect",
-    desc: "Any WalletConnect v2 compatible wallet. 300+ wallets supported.",
-    tag: "Universal",
+    icon: "🔗",
+    title: "Smart Contract",
+    desc: "Route payments through your own smart contract or multi-sig. Batch payments, escrow, custom logic — any contract that sends USDC on Base.",
+    tag: "Advanced",
   },
 ];
 
 const HOW_IT_WORKS = [
-  "Agent calls FilX API → gets HTTP 402 with payment details",
-  "Agent pays with preferred method (direct wallet, Bankr, etc.)",
-  "Payment confirmed on Base chain",
-  "Agent submits tx hash to FilX as proof of payment",
-  "FilX delivers the converted file",
+  "Agent calls FilX API → gets HTTP 402 with payment details (amount, recipient, job_id)",
+  "Agent signs and submits USDC transfer on Base (via Bankr, own wallet, or contract)",
+  "Agent resubmits to FilX with X-Payment-Tx header containing tx hash",
+  "FilX verifies on-chain payment and processes the file",
+  "Converted file returned as JSON — ready for the next pipeline step",
 ];
 
 export function BankrIntegration() {
   return (
     <section className="py-20 px-4 border-t border-white/5">
       <div className="max-w-4xl mx-auto">
-        {/* Card */}
         <div className="rounded-xl border border-white/10 bg-[#0d0f17] p-8 md:p-10 space-y-8">
           {/* Header */}
           <div className="space-y-2">
             <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold">
-              // payment options
+              // autonomous payments
             </p>
             <h2 className="font-mono font-black text-slate-200 text-2xl md:text-3xl uppercase tracking-wider leading-tight">
-              Flexible Payment Methods
+              No Humans Required
             </h2>
             <p className="font-mono text-slate-400 text-sm leading-relaxed max-w-2xl">
-              FilX uses the{" "}
-              <strong className="text-slate-200">x402 protocol</strong> for micropayments — a
-              standard HTTP 402 flow that works with any Base-compatible wallet or payment
-              integration. Choose what fits your stack.
+              FilX payments are <strong className="text-slate-200">fully programmatic</strong>. 
+              No wallet popups, no browser extensions, no approval clicks. 
+              Your agent pays autonomously via the{" "}
+              <strong className="text-slate-200">x402 protocol</strong> — 
+              standard HTTP 402 with on-chain USDC settlement on Base.
             </p>
           </div>
 
-          {/* Payment Options Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Payment Options */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {PAYMENT_OPTIONS.map((opt) => (
               <div
                 key={opt.title}
@@ -113,29 +107,18 @@ export function BankrIntegration() {
             {/* Code snippet */}
             <div className="space-y-4">
               <h3 className="font-mono font-bold text-slate-300 text-xs uppercase tracking-widest">
-                Example: Direct x402
+                Bankr Example (Python)
               </h3>
-              <div className="rounded-lg border border-white/5 bg-[#060709] p-4">
-                <p className="font-mono text-xs text-slate-500 leading-relaxed whitespace-pre">
-                  <span className="text-slate-600"># Standard x402 payment flow</span>{"\n"}
-                  <span className="text-[#3b82f6]">resp</span>
-                  <span className="text-slate-300"> = httpx.post(</span>
-                  <span className="text-green-400">&quot;/api/v1/pdf/to-markdown&quot;</span>
-                  <span className="text-slate-300">,</span>{"\n"}
-                  {"  "}
-                  <span className="text-slate-300">json={"{"}</span>
-                  <span className="text-green-400">&quot;url&quot;</span>
-                  <span className="text-slate-400">: file_url{"}"}</span>
-                  <span className="text-slate-300">)</span>{"\n"}
-                  <span className="text-slate-600"># → 402 with payment details</span>{"\n"}
-                  <span className="text-[#3b82f6]">pay</span>
-                  <span className="text-slate-300">(resp.json()</span>
-                  <span className="text-slate-400">[</span>
-                  <span className="text-green-400">&quot;payment&quot;</span>
-                  <span className="text-slate-400">]</span>
-                  <span className="text-slate-300">)</span>{"\n"}
-                  <span className="text-slate-600"># Submit any wallet tx hash</span>
-                </p>
+              <div className="rounded-lg border border-white/5 bg-[#060709] p-4 overflow-x-auto">
+                <pre className="font-mono text-xs text-slate-400 leading-relaxed">
+                  <code>{`# Agent pays via Bankr — zero keys
+bankr.prompt(
+  f"send {amount} USDC to {addr} on base"
+)
+# → Bankr signs + submits tx
+# → Agent gets tx_hash back
+# → Submit to FilX with proof`}</code>
+                </pre>
               </div>
             </div>
           </div>

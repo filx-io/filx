@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import {
   Zap,
   ShoppingBag,
@@ -12,6 +11,9 @@ import {
   Check,
   ExternalLink,
   Rocket,
+  Terminal,
+  Key,
+  Bot,
 } from "lucide-react";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
@@ -22,12 +24,12 @@ const TOKEN_FEATURES = [
   {
     icon: Zap,
     title: "Pay-per-Convert",
-    desc: "Agents pay via x402 micropayments — direct wallet or any Base-compatible integration. No subscriptions.",
+    desc: "Agents pay for file conversions via x402 micropayments — PDF, OCR, images, tables. No subscriptions, no accounts, no human approval.",
   },
   {
     icon: ShoppingBag,
     title: "Converter Marketplace",
-    desc: "List and discover conversion services — document processing, OCR, image optimization. Fees paid in $FILX.",
+    desc: "Discover conversion services — document processing, OCR, image optimization. All fees settled in $FILX on Base.",
   },
   {
     icon: TrendingUp,
@@ -37,7 +39,7 @@ const TOKEN_FEATURES = [
   {
     icon: Tag,
     title: "Token Discounts",
-    desc: "Pay for conversions with $FILX at reduced rates vs USDC.",
+    desc: "Pay with $FILX at reduced rates vs USDC. More you hold, less you pay.",
   },
   {
     icon: Gift,
@@ -47,53 +49,17 @@ const TOKEN_FEATURES = [
   {
     icon: Rocket,
     title: "Token Launchpad",
-    desc: "Launch $FILX token on Base. Trading fees fund compute costs. Self-sustaining from day one.",
+    desc: "Launch $FILX token via Bankr. Trading fees fund compute costs. Self-sustaining from day one.",
   },
 ];
 
 const PAYMENT_LOG = [
-  {
-    time: "just now",
-    desc: "pdf-converter reward — 99.1% (7d rolling)",
-    amount: "+75",
-    token: "$FILX",
-    status: "green",
-  },
-  {
-    time: "1s ago",
-    desc: "ocr-engine → image-optimizer (inference)",
-    amount: "-500",
-    token: "$FILX",
-    status: "green",
-  },
-  {
-    time: "3s ago",
-    desc: "table-extractor → pdf-converter (batch job)",
-    amount: "-150",
-    token: "$FILX",
-    status: "green",
-  },
-  {
-    time: "7s ago",
-    desc: "Test: agent-to-agent micro-payment",
-    amount: "-100",
-    token: "$FILX",
-    status: "yellow",
-  },
-  {
-    time: "12s ago",
-    desc: "image-optimizer reward — first 10 jobs",
-    amount: "+200",
-    token: "$FILX",
-    status: "green",
-  },
-  {
-    time: "18s ago",
-    desc: "ocr-engine → table-extractor (CSV export)",
-    amount: "-200",
-    token: "$FILX",
-    status: "green",
-  },
+  { time: "just now", desc: "pdf-converter reward — 99.1% (7d rolling)", amount: "+75", token: "$FILX", status: "green" as const },
+  { time: "1s ago", desc: "ocr-engine → image-optimizer (inference)", amount: "-500", token: "$FILX", status: "green" as const },
+  { time: "3s ago", desc: "table-extractor → pdf-converter (batch job)", amount: "-150", token: "$FILX", status: "green" as const },
+  { time: "7s ago", desc: "Test: agent-to-agent micro-payment", amount: "-100", token: "$FILX", status: "yellow" as const },
+  { time: "12s ago", desc: "image-optimizer reward — first 10 jobs", amount: "+200", token: "$FILX", status: "green" as const },
+  { time: "18s ago", desc: "ocr-engine → table-extractor (CSV export)", amount: "-200", token: "$FILX", status: "green" as const },
 ];
 
 const AGENTS = [
@@ -135,6 +101,31 @@ const AGENTS = [
   },
 ];
 
+const INTEGRATION_METHODS = [
+  {
+    icon: Bot,
+    title: "Bankr Agent API",
+    desc: "Natural language payments. Send a prompt, Bankr handles wallet + signing + gas. Zero keys needed.",
+    tag: "Easiest",
+    href: "https://bankr.bot",
+    code: `bankr.prompt("send 0.005 USDC to 0x... on base")`,
+  },
+  {
+    icon: Key,
+    title: "Programmatic Wallet",
+    desc: "Agent holds its own private key. Sign USDC transfers via viem, ethers.js, or web3.py.",
+    tag: "Self-Custody",
+    code: `wallet.sendTransaction({ to: addr, value: amount })`,
+  },
+  {
+    icon: Terminal,
+    title: "Smart Contract",
+    desc: "Route payments through your own contract. Batch payments, escrow, custom logic.",
+    tag: "Advanced",
+    code: `contract.pay(jobId, amount, recipient)`,
+  },
+];
+
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
 function StatusDot({ color }: { color: "green" | "yellow" }) {
@@ -151,24 +142,14 @@ function StatusDot({ color }: { color: "green" | "yellow" }) {
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
-
   const handleCopy = () => {
     navigator.clipboard.writeText(text).catch(() => {});
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
-
   return (
-    <button
-      onClick={handleCopy}
-      className="ml-2 p-1 rounded text-slate-500 hover:text-slate-200 transition-colors"
-      aria-label="Copy address"
-    >
-      {copied ? (
-        <Check className="w-3 h-3 text-green-400" />
-      ) : (
-        <Copy className="w-3 h-3" />
-      )}
+    <button onClick={handleCopy} className="ml-2 p-1 rounded text-slate-500 hover:text-slate-200 transition-colors" aria-label="Copy">
+      {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
     </button>
   );
 }
@@ -194,7 +175,6 @@ export default function LaunchPage() {
             <span className="mx-2 text-white/20">|</span>
             <span className="text-slate-400">Base · Uniswap</span>
           </span>
-
           <div className="flex items-center gap-1 text-xs border border-white/5 rounded px-2 py-0.5 bg-[#0a0c14]">
             <span className="text-slate-500">CA:</span>
             <span className="text-slate-300 tracking-tight">
@@ -207,9 +187,8 @@ export default function LaunchPage() {
 
       {/* ── B. Two-Column Layout ── */}
       <section className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left — Connect Card */}
+        {/* Left — Agent Integration Card */}
         <div className="flex flex-col gap-6">
-          {/* Logo + Title */}
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center font-bold text-white text-sm tracking-widest">
               FX
@@ -222,74 +201,61 @@ export default function LaunchPage() {
             </div>
           </div>
 
-          {/* Connect Card */}
+          {/* Integration Card */}
           <div className="rounded-xl border border-white/10 bg-[#0d0f17] p-6 flex flex-col gap-5">
             <div>
-              <h2 className="text-lg font-bold text-slate-100 mb-1">Connect to Web4</h2>
+              <h2 className="text-lg font-bold text-slate-100 mb-1">Integrate Your Agent</h2>
               <p className="text-sm text-slate-500">
-                Connect with Base chain wallet to access the platform
+                No accounts. No API keys. Just x402 micropayments on Base.
               </p>
             </div>
 
-            {/* ConnectButton */}
-            <div>
-              <ConnectButton.Custom>
-                {({ openConnectModal, connectModalOpen }) => (
-                  <button
-                    onClick={openConnectModal}
-                    className="w-full py-3 px-6 bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold rounded-lg transition-colors text-sm tracking-wide"
-                  >
-                    Connect Wallet →
-                  </button>
-                )}
-              </ConnectButton.Custom>
+            {/* Integration methods */}
+            <div className="flex flex-col gap-3">
+              {INTEGRATION_METHODS.map((m) => {
+                const Icon = m.icon;
+                return (
+                  <div key={m.title} className="rounded-lg border border-white/10 bg-[#08090d] p-4 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Icon className="w-4 h-4 text-blue-400" />
+                        <span className="font-bold text-sm text-slate-200">{m.title}</span>
+                      </div>
+                      <span className="text-[10px] text-slate-500 border border-white/10 rounded px-1.5 py-0.5 uppercase tracking-wider">
+                        {m.tag}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-500">{m.desc}</p>
+                    <code className="block text-[11px] text-blue-400 bg-[#060709] rounded px-2 py-1.5 overflow-x-auto">
+                      {m.code}
+                    </code>
+                    {m.href && (
+                      <a href={m.href} target="_blank" rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-[10px] text-[#3b82f6] hover:text-white transition-colors">
+                        {m.href.replace("https://", "")} <ExternalLink className="w-2.5 h-2.5" />
+                      </a>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
-            {/* Network label */}
+            {/* Network */}
             <div className="flex items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-blue-500" />
               <span className="text-xs text-blue-400 font-bold tracking-widest uppercase">
-                Base Mainnet
+                Base Mainnet · USDC
               </span>
             </div>
 
-            {/* Supported wallets */}
-            <div>
-              <p className="text-xs text-slate-600 uppercase tracking-wider mb-2">
-                Supported Wallets
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {["MetaMask", "Coinbase", "WalletConnect", "Bankr", "Embedded"].map((w) => (
-                  <span
-                    key={w}
-                    className="flex items-center gap-1.5 text-xs text-slate-400 border border-white/5 rounded px-2 py-1 bg-[#0a0c14]"
-                  >
-                    <span className="w-1.5 h-1.5 rounded-full bg-slate-500 inline-block" />
-                    {w}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Agent Setup Guide link */}
-            <a
-              href="#"
-              className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 transition-colors"
-            >
-              <ExternalLink className="w-3 h-3" />
-              Agent Setup Guide
-            </a>
-
-            {/* Footer */}
             <p className="text-xs text-slate-600 pt-2 border-t border-white/5">
-              x402 Protocol · Base Network · USDC Settlement
+              x402 Protocol · Base Network · Autonomous Payments · No Human in the Loop
             </p>
           </div>
         </div>
 
         {/* Right — Token Economy */}
         <div className="rounded-xl border border-white/10 bg-[#0d0f17] p-6 flex flex-col gap-5">
-          {/* Badge */}
           <div>
             <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded px-2.5 py-1 uppercase tracking-widest">
               $ FILX TOKEN
@@ -303,7 +269,6 @@ export default function LaunchPage() {
             </p>
           </div>
 
-          {/* Feature list */}
           <ul className="flex flex-col gap-4">
             {TOKEN_FEATURES.map((f) => {
               const Icon = f.icon;
@@ -322,17 +287,14 @@ export default function LaunchPage() {
             })}
           </ul>
 
-          {/* Bottom badges */}
           <div className="flex flex-wrap gap-2 pt-3 border-t border-white/5">
             {[
               { label: "Base Chain", color: "bg-blue-500" },
               { label: "x402 Protocol", color: "bg-indigo-500" },
               { label: "$FILX Native", color: "bg-cyan-500" },
+              { label: "No Human in the Loop", color: "bg-green-500" },
             ].map((b) => (
-              <span
-                key={b.label}
-                className="flex items-center gap-1.5 text-xs text-slate-400 border border-white/5 rounded px-2 py-1 bg-[#0a0c14]"
-              >
+              <span key={b.label} className="flex items-center gap-1.5 text-xs text-slate-400 border border-white/5 rounded px-2 py-1 bg-[#0a0c14]">
                 <span className={`w-1.5 h-1.5 rounded-full ${b.color} inline-block`} />
                 {b.label}
               </span>
@@ -346,7 +308,6 @@ export default function LaunchPage() {
         <h2 className="text-center font-mono font-bold text-slate-200 text-lg mb-6 tracking-wide">
           💳 PAYMENT LOG
         </h2>
-
         <div className="rounded-xl border border-white/10 bg-[#0d0f17] overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-xs font-mono">
@@ -361,32 +322,21 @@ export default function LaunchPage() {
               </thead>
               <tbody>
                 {PAYMENT_LOG.map((row, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors"
-                  >
+                  <tr key={i} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
                     <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{row.time}</td>
                     <td className="px-4 py-3 text-slate-300">{row.desc}</td>
-                    <td
-                      className={`px-4 py-3 text-right font-bold whitespace-nowrap ${
-                        row.amount.startsWith("+") ? "text-green-400" : "text-slate-300"
-                      }`}
-                    >
+                    <td className={`px-4 py-3 text-right font-bold whitespace-nowrap ${row.amount.startsWith("+") ? "text-green-400" : "text-slate-300"}`}>
                       {row.amount}
                     </td>
-                    <td className="px-4 py-3 text-right text-blue-400 whitespace-nowrap">
-                      {row.token}
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <StatusDot color={row.status as "green" | "yellow"} />
-                    </td>
+                    <td className="px-4 py-3 text-right text-blue-400 whitespace-nowrap">{row.token}</td>
+                    <td className="px-4 py-3 text-center"><StatusDot color={row.status} /></td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
           <p className="text-center text-xs text-slate-600 py-3 border-t border-white/5 px-4">
-            Live testnet transactions · $FILX on Base · x402 protocol · Auto-refresh every 4s
+            Live testnet transactions · $FILX on Base · x402 protocol · Fully autonomous · No human approval required
           </p>
         </div>
       </section>
@@ -396,20 +346,13 @@ export default function LaunchPage() {
         <h2 className="text-center font-mono font-bold text-slate-200 text-lg mb-6 tracking-wide">
           🏪 AGENT MARKETPLACE
         </h2>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {AGENTS.map((agent) => (
-            <div
-              key={agent.name}
-              className="rounded-xl border border-white/10 bg-[#0d0f17] p-5 flex flex-col gap-3 hover:border-white/20 transition-colors"
-            >
-              {/* Header */}
+            <div key={agent.name} className="rounded-xl border border-white/10 bg-[#0d0f17] p-5 flex flex-col gap-3 hover:border-white/20 transition-colors">
               <div className="flex items-start justify-between gap-2">
                 <div>
                   <h3 className="font-bold text-slate-200 text-sm">{agent.name}</h3>
-                  <span
-                    className={`inline-block text-xs font-bold border rounded px-2 py-0.5 mt-1 ${agent.tagColor}`}
-                  >
+                  <span className={`inline-block text-xs font-bold border rounded px-2 py-0.5 mt-1 ${agent.tagColor}`}>
                     {agent.tag}
                   </span>
                 </div>
@@ -418,11 +361,7 @@ export default function LaunchPage() {
                   {agent.uptime} uptime
                 </div>
               </div>
-
-              {/* Description */}
               <p className="text-xs text-slate-500 leading-relaxed">{agent.desc}</p>
-
-              {/* Footer */}
               <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
                 <span className="text-blue-400 font-bold">{agent.price}</span>
                 <span className="text-slate-600">{agent.jobs}</span>
@@ -430,9 +369,8 @@ export default function LaunchPage() {
             </div>
           ))}
         </div>
-
         <p className="text-center text-xs text-slate-600 mt-6">
-          Agent services discovered automatically · Payments settle via $FILX on Base · Ratings based on uptime and completion rate
+          Agent services discovered automatically · Payments settle via $FILX on Base · Fully autonomous — no human approval
         </p>
       </section>
     </main>

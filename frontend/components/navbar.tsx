@@ -1,7 +1,4 @@
-"use client";
-
 import Link from "next/link";
-import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Github, BookOpen, Zap } from "lucide-react";
 
 export function Navbar() {
@@ -15,30 +12,19 @@ export function Navbar() {
 
         {/* Right side */}
         <div className="flex items-center gap-4">
-          {/* Social icons */}
           <div className="hidden sm:flex items-center gap-3">
             <a
               href="https://x.com/filx_io"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-500 hover:text-slate-200 transition-colors"
-              aria-label="X (formerly Twitter)"
+              aria-label="X"
             >
-              {/* X (formerly Twitter) logo */}
-              <svg
-                viewBox="0 0 24 24"
-                className="w-4 h-4"
-                fill="currentColor"
-                aria-hidden="true"
-              >
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="currentColor" aria-hidden="true">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
               </svg>
             </a>
-            <Link
-              href="/docs"
-              className="text-slate-500 hover:text-slate-200 transition-colors"
-              aria-label="Docs"
-            >
+            <Link href="/docs" className="text-slate-500 hover:text-slate-200 transition-colors" aria-label="Docs">
               <BookOpen className="w-4 h-4" />
             </Link>
             <a
@@ -54,21 +40,13 @@ export function Navbar() {
 
           <div className="w-px h-4 bg-white/[0.06] hidden sm:block" />
 
-          {/* Launch App link */}
           <Link
             href="https://app.filx.io"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#3b82f6]/40 text-[#3b82f6] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#3b82f6]/10 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-[#3b82f6]/40 text-[#3b82f6] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#3b82f6]/10 transition-colors"
           >
             <Zap className="w-3 h-3" />
             App
           </Link>
-
-          <ConnectButton
-            label="Connect"
-            accountStatus="avatar"
-            chainStatus="icon"
-            showBalance={false}
-          />
         </div>
       </div>
     </header>
