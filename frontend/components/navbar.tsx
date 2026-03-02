@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
-import { Twitter, Github } from "lucide-react";
+import { Github } from "lucide-react";
 
 export function Navbar() {
   return (
@@ -18,13 +18,21 @@ export function Navbar() {
           {/* Social icons */}
           <div className="hidden sm:flex items-center gap-3">
             <a
-              href="https://twitter.com/filx_io"
+              href="https://x.com/filx_io"
               target="_blank"
               rel="noopener noreferrer"
               className="text-slate-500 hover:text-slate-200 transition-colors"
-              aria-label="Twitter / X"
+              aria-label="X (formerly Twitter)"
             >
-              <Twitter className="w-4 h-4" />
+              {/* X (formerly Twitter) logo */}
+              <svg
+                viewBox="0 0 24 24"
+                className="w-4 h-4"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.748l7.73-8.835L1.254 2.25H8.08l4.713 6.231 5.45-6.231Zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
             </a>
             <a
               href="https://github.com/filx-io/web"
