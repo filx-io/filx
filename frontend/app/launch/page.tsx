@@ -2,105 +2,22 @@
 
 import { useState } from "react";
 import {
-  Zap,
-  ShoppingBag,
-  TrendingUp,
-  Tag,
-  Gift,
   Copy,
   Check,
   ExternalLink,
-  Rocket,
   Terminal,
   Key,
   Bot,
+  ArrowRight,
+  FileText,
+  Image,
+  Table,
+  FileCode,
 } from "lucide-react";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
-
-const CONTRACT_ADDRESS = "0x0000000000000000000000000000000000000000";
-
-const TOKEN_FEATURES = [
-  {
-    icon: Zap,
-    title: "Pay-per-Convert",
-    desc: "Agents pay for file conversions via x402 micropayments — PDF, OCR, images, tables. No subscriptions, no accounts, no human approval.",
-  },
-  {
-    icon: ShoppingBag,
-    title: "Converter Marketplace",
-    desc: "Discover conversion services — document processing, OCR, image optimization. All fees settled in $FILX on Base.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Volume Rewards",
-    desc: "High-volume converters earn $FILX rewards automatically — incentivizing consistent platform usage.",
-  },
-  {
-    icon: Tag,
-    title: "Token Discounts",
-    desc: "Pay with $FILX at reduced rates vs USDC. More you hold, less you pay.",
-  },
-  {
-    icon: Gift,
-    title: "Early Adopter Incentives",
-    desc: "First 100 agents earn bonus $FILX. Milestone rewards for conversions, API calls, and first payments.",
-  },
-  {
-    icon: Rocket,
-    title: "Token Launchpad",
-    desc: "Launch $FILX token via Bankr. Trading fees fund compute costs. Self-sustaining from day one.",
-  },
-];
-
-const PAYMENT_LOG = [
-  { time: "just now", desc: "pdf-converter reward — 99.1% (7d rolling)", amount: "+75", token: "$FILX", status: "green" as const },
-  { time: "1s ago", desc: "ocr-engine → image-optimizer (inference)", amount: "-500", token: "$FILX", status: "green" as const },
-  { time: "3s ago", desc: "table-extractor → pdf-converter (batch job)", amount: "-150", token: "$FILX", status: "green" as const },
-  { time: "7s ago", desc: "Test: agent-to-agent micro-payment", amount: "-100", token: "$FILX", status: "yellow" as const },
-  { time: "12s ago", desc: "image-optimizer reward — first 10 jobs", amount: "+200", token: "$FILX", status: "green" as const },
-  { time: "18s ago", desc: "ocr-engine → table-extractor (CSV export)", amount: "-200", token: "$FILX", status: "green" as const },
-];
-
-const AGENTS = [
-  {
-    name: "pdf-converter",
-    tag: "Document",
-    tagColor: "text-purple-400 bg-purple-500/10 border-purple-500/20",
-    uptime: "97.2%",
-    desc: "High-fidelity PDF to Markdown converter with heading, table, and list preservation.",
-    price: "100 $FILX/job",
-    jobs: "12 jobs",
-  },
-  {
-    name: "ocr-engine",
-    tag: "Processing",
-    tagColor: "text-green-400 bg-green-500/10 border-green-500/20",
-    uptime: "99.1%",
-    desc: "Multi-language OCR for scanned PDFs and images. English + Indonesian. Powered by Tesseract.",
-    price: "150 $FILX/page",
-    jobs: "8 jobs",
-  },
-  {
-    name: "image-optimizer",
-    tag: "Media",
-    tagColor: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-    uptime: "99.6%",
-    desc: "Smart image conversion, compression, and background removal. WebP/AVIF/PNG/JPG.",
-    price: "200 $FILX/image",
-    jobs: "5 jobs",
-  },
-  {
-    name: "table-extractor",
-    tag: "Compute",
-    tagColor: "text-orange-400 bg-orange-500/10 border-orange-500/20",
-    uptime: "96.8%",
-    desc: "Extract tables from PDFs and images to CSV or JSON. Ready for data pipelines.",
-    price: "500 $FILX/job",
-    jobs: "3 jobs",
-  },
-];
 
 const INTEGRATION_METHODS = [
   {
@@ -127,19 +44,94 @@ const INTEGRATION_METHODS = [
   },
 ];
 
-// ─── Sub-components ────────────────────────────────────────────────────────────
+const TOP_ENDPOINTS = [
+  {
+    icon: FileText,
+    method: "POST",
+    path: "/api/v1/pdf/to-markdown",
+    label: "PDF → Markdown",
+    price: "$0.002",
+    unit: "per page",
+    desc: "High-fidelity conversion preserving headings, tables, lists. Ideal for RAG pipelines.",
+  },
+  {
+    icon: FileText,
+    method: "POST",
+    path: "/api/v1/pdf/ocr",
+    label: "PDF OCR",
+    price: "$0.004",
+    unit: "per page",
+    desc: "Extract text from scanned PDFs. Multi-language: English + Indonesian.",
+  },
+  {
+    icon: Image,
+    method: "POST",
+    path: "/api/v1/image/convert",
+    label: "Image Convert",
+    price: "$0.001",
+    unit: "per image",
+    desc: "Convert between PNG, JPG, WebP, AVIF, BMP, TIFF, GIF, SVG, ICO.",
+  },
+  {
+    icon: Image,
+    method: "POST",
+    path: "/api/v1/image/remove-bg",
+    label: "Background Remove",
+    price: "$0.005",
+    unit: "per image",
+    desc: "AI-powered background removal. Returns transparent PNG.",
+  },
+  {
+    icon: Table,
+    method: "POST",
+    path: "/api/v1/table/extract",
+    label: "Table Extract",
+    price: "$0.003",
+    unit: "per page",
+    desc: "Extract tables from PDFs or images to CSV or JSON.",
+  },
+  {
+    icon: FileCode,
+    method: "POST",
+    path: "/api/v1/html/to-pdf",
+    label: "HTML → PDF",
+    price: "$0.002",
+    unit: "per page",
+    desc: "Convert web pages or HTML strings to styled PDF.",
+  },
+];
 
-function StatusDot({ color }: { color: "green" | "yellow" }) {
-  return (
-    <span
-      className={
-        color === "green"
-          ? "inline-block w-2 h-2 rounded-full bg-green-400"
-          : "inline-block w-2 h-2 rounded-full bg-yellow-400"
-      }
-    />
-  );
-}
+const X402_STEPS = [
+  {
+    n: "01",
+    title: "REQUEST",
+    color: "text-[#3b82f6]",
+    code: `POST /api/v1/pdf/to-markdown
+Content-Type: application/json
+
+{"url": "https://example.com/doc.pdf"}`,
+  },
+  {
+    n: "02",
+    title: "402 PAYMENT REQUIRED",
+    color: "text-yellow-400",
+    code: `HTTP/1.1 402 Payment Required
+PAYMENT-REQUIRED: eyJzY2hlbWUi...
+
+{"amount":"0.002","currency":"USDC"}`,
+  },
+  {
+    n: "03",
+    title: "PAY + 200 OK",
+    color: "text-green-400",
+    code: `PAYMENT-SIGNATURE: eyJ0eEhhc2gi...
+
+HTTP/1.1 200 OK
+{"content": "# Document..."}`,
+  },
+];
+
+// ─── Sub-components ────────────────────────────────────────────────────────────
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
@@ -149,7 +141,11 @@ function CopyButton({ text }: { text: string }) {
     setTimeout(() => setCopied(false), 2000);
   };
   return (
-    <button onClick={handleCopy} className="ml-2 p-1 rounded text-slate-500 hover:text-slate-200 transition-colors" aria-label="Copy">
+    <button
+      onClick={handleCopy}
+      className="ml-2 p-1 text-slate-500 hover:text-slate-200 transition-colors"
+      aria-label="Copy"
+    >
       {copied ? <Check className="w-3 h-3 text-green-400" /> : <Copy className="w-3 h-3" />}
     </button>
   );
@@ -161,77 +157,77 @@ export default function LaunchPage() {
   return (
     <>
       <Navbar />
-    <main className="min-h-screen bg-[#08090d] font-mono text-slate-300">
-      {/* ── A. Token Ticker Bar ── */}
-      <section className="w-full bg-[#0d0f17] border-b border-white/5 py-2 px-4">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2 text-xs text-slate-400 font-mono">
-          <span className="text-center">
-            <span className="text-blue-400 font-bold">#</span>{" "}
-            <span className="text-slate-200 font-bold">$FILX</span>{" "}
-            <span className="text-slate-300">$0.000000</span>
-            <span className="mx-2 text-white/20">|</span>
-            <span>Vol <span className="text-slate-300">$0</span></span>
-            <span className="mx-2 text-white/20">|</span>
-            <span>MCap <span className="text-slate-300">$0</span></span>
-            <span className="mx-2 text-white/20">|</span>
-            <span>Liq <span className="text-slate-300">$0</span></span>
-            <span className="mx-2 text-white/20">|</span>
-            <span className="text-slate-400">Base · Uniswap</span>
-          </span>
-          <div className="flex items-center gap-1 text-xs border border-white/5 rounded px-2 py-0.5 bg-[#0a0c14]">
-            <span className="text-slate-500">CA:</span>
-            <span className="text-slate-300 tracking-tight">
-              {CONTRACT_ADDRESS.slice(0, 8)}…{CONTRACT_ADDRESS.slice(-6)}
-            </span>
-            <CopyButton text={CONTRACT_ADDRESS} />
-          </div>
-        </div>
-      </section>
+      <main className="min-h-screen bg-[#08090d] font-mono text-slate-300">
 
-      {/* ── B. Two-Column Layout ── */}
-      <section className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Left — Agent Integration Card */}
-        <div className="flex flex-col gap-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-600 rounded flex items-center justify-center font-bold text-white text-sm tracking-widest">
-              FX
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-200 tracking-wide">FliX</h1>
-              <p className="text-xs text-slate-500 uppercase tracking-widest">
-                File Conversion Infrastructure
-              </p>
+        {/* ── Hero ── */}
+        <section className="border-b border-white/5 py-10 px-6 text-center">
+          <div className="max-w-2xl mx-auto space-y-3">
+            <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold">
+              ✦ x402 PROTOCOL · BASE CHAIN · USDC
+            </p>
+            <h1 className="font-mono font-black text-slate-100 text-2xl md:text-3xl uppercase tracking-widest">
+              File Conversion for AI Agents
+            </h1>
+            <p className="font-mono text-slate-500 text-sm">
+              No accounts. No API keys. Just HTTP + USDC micropayments on Base.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+              <a
+                href="https://api.filx.io/docs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-[#3b82f6] text-white font-mono font-semibold text-sm tracking-wide hover:bg-[#2563eb] transition-colors"
+              >
+                Read the Docs <ArrowRight className="w-4 h-4" />
+              </a>
+              <a
+                href="https://filx.io"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 border border-white/10 text-slate-300 font-mono font-semibold text-sm tracking-wide hover:border-white/25 hover:text-white transition-colors"
+              >
+                ← Back to Landing Page
+              </a>
             </div>
           </div>
+        </section>
 
-          {/* Integration Card */}
-          <div className="rounded-xl border border-white/10 bg-[#0d0f17] p-6 flex flex-col gap-5">
+        {/* ── Two-Column: Integration + Endpoints ── */}
+        <section className="max-w-6xl mx-auto px-4 py-12 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          {/* Left — Agent Integration */}
+          <div className="flex flex-col gap-5">
             <div>
-              <h2 className="text-lg font-bold text-slate-100 mb-1">Integrate Your Agent</h2>
-              <p className="text-sm text-slate-500">
-                No accounts. No API keys. Just x402 micropayments on Base.
+              <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold mb-2">
+                // integrate your agent
+              </p>
+              <h2 className="font-mono font-black text-slate-200 text-xl uppercase tracking-widest">
+                Connect in Minutes
+              </h2>
+              <p className="font-mono text-slate-500 text-xs mt-1">
+                Three ways to get your agent paying with USDC on Base.
               </p>
             </div>
 
-            {/* Integration methods */}
             <div className="flex flex-col gap-3">
               {INTEGRATION_METHODS.map((m) => {
                 const Icon = m.icon;
                 return (
-                  <div key={m.title} className="rounded-lg border border-white/10 bg-[#08090d] p-4 space-y-2">
+                  <div key={m.title} className="border border-white/10 bg-[#0d0f17] p-4 space-y-2 hover:border-white/20 transition-colors">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Icon className="w-4 h-4 text-blue-400" />
+                        <Icon className="w-4 h-4 text-[#3b82f6]" />
                         <span className="font-bold text-sm text-slate-200">{m.title}</span>
                       </div>
-                      <span className="text-[10px] text-slate-500 border border-white/10 rounded px-1.5 py-0.5 uppercase tracking-wider">
+                      <span className="text-[10px] text-slate-500 border border-white/10 px-1.5 py-0.5 uppercase tracking-wider">
                         {m.tag}
                       </span>
                     </div>
                     <p className="text-xs text-slate-500">{m.desc}</p>
-                    <code className="block text-[11px] text-blue-400 bg-[#060709] rounded px-2 py-1.5 overflow-x-auto">
-                      {m.code}
-                    </code>
+                    <div className="flex items-center">
+                      <code className="flex-1 text-[11px] text-[#3b82f6] bg-[#060709] px-2 py-1.5 overflow-x-auto border border-white/5">
+                        {m.code}
+                      </code>
+                      <CopyButton text={m.code} />
+                    </div>
                     {m.href && (
                       <a href={m.href} target="_blank" rel="noopener noreferrer"
                         className="inline-flex items-center gap-1 text-[10px] text-[#3b82f6] hover:text-white transition-colors">
@@ -243,140 +239,179 @@ export default function LaunchPage() {
               })}
             </div>
 
-            {/* Network */}
-            <div className="flex items-center gap-2">
+            <div className="border border-white/5 bg-[#0d0f17] px-4 py-3 flex items-center gap-2">
               <span className="inline-block w-2 h-2 rounded-full bg-blue-500" />
-              <span className="text-xs text-blue-400 font-bold tracking-widest uppercase">
-                Base Mainnet · USDC
+              <span className="text-xs text-[#3b82f6] font-bold tracking-widest uppercase">
+                Base Mainnet · USDC · x402 Protocol
               </span>
             </div>
-
-            <p className="text-xs text-slate-600 pt-2 border-t border-white/5">
-              x402 Protocol · Base Network · Autonomous Payments · No Human in the Loop
-            </p>
-          </div>
-        </div>
-
-        {/* Right — Token Economy */}
-        <div className="rounded-xl border border-white/10 bg-[#0d0f17] p-6 flex flex-col gap-5">
-          <div>
-            <span className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 rounded px-2.5 py-1 uppercase tracking-widest">
-              $ FILX TOKEN
-            </span>
           </div>
 
-          <div>
-            <h2 className="text-2xl font-bold text-slate-100 mb-2">File Economy</h2>
-            <p className="text-sm text-slate-500">
-              The native token powering autonomous file conversion infrastructure
-            </p>
-          </div>
+          {/* Right — Top Endpoints */}
+          <div className="flex flex-col gap-5">
+            <div>
+              <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold mb-2">
+                // api endpoints
+              </p>
+              <h2 className="font-mono font-black text-slate-200 text-xl uppercase tracking-widest">
+                20+ Endpoints
+              </h2>
+              <p className="font-mono text-slate-500 text-xs mt-1">
+                Every endpoint is a single POST request with x402 micropayment. No SDK needed.
+              </p>
+            </div>
 
-          <ul className="flex flex-col gap-4">
-            {TOKEN_FEATURES.map((f) => {
-              const Icon = f.icon;
-              return (
-                <li key={f.title} className="flex gap-3">
-                  <div className="mt-0.5 flex-shrink-0 w-7 h-7 rounded-md bg-blue-600/10 border border-blue-500/20 flex items-center justify-center">
-                    <Icon className="w-3.5 h-3.5 text-blue-400" />
+            <div className="border border-white/10 bg-[#0d0f17] overflow-hidden">
+              <div className="grid grid-cols-3 text-[10px] font-mono font-bold text-slate-600 uppercase tracking-widest px-4 py-2.5 bg-white/[0.02] border-b border-white/[0.06]">
+                <span>Endpoint</span>
+                <span className="text-center">Price</span>
+                <span className="text-right">Unit</span>
+              </div>
+              <div className="divide-y divide-white/[0.04]">
+                {TOP_ENDPOINTS.map((ep) => (
+                  <div
+                    key={ep.path}
+                    className="grid grid-cols-3 items-center px-4 py-3 hover:bg-white/[0.02] transition-colors"
+                  >
+                    <span className="font-mono text-xs text-slate-300">{ep.label}</span>
+                    <span className="text-center font-mono font-bold text-[#3b82f6] text-sm">{ep.price}</span>
+                    <span className="text-right font-mono text-slate-500 text-xs">{ep.unit}</span>
                   </div>
-                  <div>
-                    <span className="text-sm font-bold text-slate-200">{f.title}</span>
-                    <span className="text-slate-500"> — </span>
-                    <span className="text-sm text-slate-400">{f.desc}</span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-
-          <div className="flex flex-wrap gap-2 pt-3 border-t border-white/5">
-            {[
-              { label: "Base Chain", color: "bg-blue-500" },
-              { label: "x402 Protocol", color: "bg-indigo-500" },
-              { label: "$FILX Native", color: "bg-cyan-500" },
-              { label: "No Human in the Loop", color: "bg-green-500" },
-            ].map((b) => (
-              <span key={b.label} className="flex items-center gap-1.5 text-xs text-slate-400 border border-white/5 rounded px-2 py-1 bg-[#0a0c14]">
-                <span className={`w-1.5 h-1.5 rounded-full ${b.color} inline-block`} />
-                {b.label}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── C. Payment Log ── */}
-      <section className="max-w-6xl mx-auto px-4 pb-12">
-        <h2 className="text-center font-mono font-bold text-slate-200 text-lg mb-6 tracking-wide">
-          💳 PAYMENT LOG
-        </h2>
-        <div className="rounded-xl border border-white/10 bg-[#0d0f17] overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs font-mono">
-              <thead>
-                <tr className="border-b border-white/5 text-slate-600 uppercase tracking-widest">
-                  <th className="text-left px-4 py-3">Time</th>
-                  <th className="text-left px-4 py-3">Description</th>
-                  <th className="text-right px-4 py-3">Amount</th>
-                  <th className="text-right px-4 py-3">Token</th>
-                  <th className="text-center px-4 py-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {PAYMENT_LOG.map((row, i) => (
-                  <tr key={i} className="border-b border-white/[0.03] hover:bg-white/[0.02] transition-colors">
-                    <td className="px-4 py-3 text-slate-500 whitespace-nowrap">{row.time}</td>
-                    <td className="px-4 py-3 text-slate-300">{row.desc}</td>
-                    <td className={`px-4 py-3 text-right font-bold whitespace-nowrap ${row.amount.startsWith("+") ? "text-green-400" : "text-slate-300"}`}>
-                      {row.amount}
-                    </td>
-                    <td className="px-4 py-3 text-right text-blue-400 whitespace-nowrap">{row.token}</td>
-                    <td className="px-4 py-3 text-center"><StatusDot color={row.status} /></td>
-                  </tr>
                 ))}
-              </tbody>
-            </table>
-          </div>
-          <p className="text-center text-xs text-slate-600 py-3 border-t border-white/5 px-4">
-            Live testnet transactions · $FILX on Base · x402 protocol · Fully autonomous · No human approval required
-          </p>
-        </div>
-      </section>
-
-      {/* ── D. Agent Marketplace ── */}
-      <section className="max-w-6xl mx-auto px-4 pb-16">
-        <h2 className="text-center font-mono font-bold text-slate-200 text-lg mb-6 tracking-wide">
-          🏪 AGENT MARKETPLACE
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {AGENTS.map((agent) => (
-            <div key={agent.name} className="rounded-xl border border-white/10 bg-[#0d0f17] p-5 flex flex-col gap-3 hover:border-white/20 transition-colors">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="font-bold text-slate-200 text-sm">{agent.name}</h3>
-                  <span className={`inline-block text-xs font-bold border rounded px-2 py-0.5 mt-1 ${agent.tagColor}`}>
-                    {agent.tag}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1.5 text-xs text-slate-500 whitespace-nowrap">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400" />
-                  {agent.uptime} uptime
-                </div>
               </div>
-              <p className="text-xs text-slate-500 leading-relaxed">{agent.desc}</p>
-              <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
-                <span className="text-blue-400 font-bold">{agent.price}</span>
-                <span className="text-slate-600">{agent.jobs}</span>
+              <div className="border-t border-white/[0.06] px-4 py-3 flex justify-between items-center">
+                <span className="font-mono text-[10px] text-slate-600">All prices in USDC · Base mainnet</span>
+                <a
+                  href="https://api.filx.io/docs"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-[10px] text-[#3b82f6] hover:text-white transition-colors flex items-center gap-1"
+                >
+                  Full docs <ExternalLink className="w-2.5 h-2.5" />
+                </a>
               </div>
             </div>
-          ))}
-        </div>
-        <p className="text-center text-xs text-slate-600 mt-6">
-          Agent services discovered automatically · Payments settle via $FILX on Base · Fully autonomous — no human approval
-        </p>
-      </section>
-    </main>
+          </div>
+        </section>
+
+        {/* ── x402 Flow ── */}
+        <section className="border-t border-white/5 py-12 px-4">
+          <div className="max-w-6xl mx-auto space-y-8">
+            <div className="text-center space-y-2">
+              <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold">
+                // x402 protocol
+              </p>
+              <h2 className="font-mono font-black text-slate-200 text-xl uppercase tracking-widest">
+                How It Works
+              </h2>
+              <p className="font-mono text-slate-500 text-sm">
+                Three HTTP exchanges. No accounts. No API keys. Pure x402.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              {X402_STEPS.map((step) => (
+                <div key={step.n} className="border border-white/10 bg-[#0d0f17] p-5 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 border border-[#3b82f6] flex items-center justify-center flex-shrink-0">
+                      <span className="font-mono font-black text-xs text-[#3b82f6]">{step.n}</span>
+                    </div>
+                    <h3 className={`font-mono font-black text-sm uppercase tracking-widest ${step.color}`}>
+                      {step.title}
+                    </h3>
+                  </div>
+                  <div className="bg-[#060709] border border-white/5 p-3">
+                    <pre className="font-mono text-[11px] text-slate-400 leading-relaxed whitespace-pre-wrap">
+                      {step.code}
+                    </pre>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* ── Available Services ── */}
+        <section className="border-t border-white/5 py-12 px-4">
+          <div className="max-w-6xl mx-auto space-y-8">
+            <div className="text-center space-y-2">
+              <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold">
+                // available services
+              </p>
+              <h2 className="font-mono font-black text-slate-200 text-xl uppercase tracking-widest">
+                Conversion Services
+              </h2>
+              <p className="font-mono text-slate-500 text-sm">
+                Each service is a standalone x402 endpoint. Pay per request. Scale without limits.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {[
+                {
+                  name: "PDF → Markdown",
+                  tag: "Document",
+                  tagColor: "text-purple-400 border-purple-400/30",
+                  uptime: "99.2%",
+                  desc: "High-fidelity PDF to Markdown converter with heading, table, and list preservation.",
+                  price: "$0.002 USDC",
+                  unit: "per page",
+                },
+                {
+                  name: "OCR Engine",
+                  tag: "Processing",
+                  tagColor: "text-green-400 border-green-400/30",
+                  uptime: "99.1%",
+                  desc: "Multi-language OCR for scanned PDFs and images. English + Indonesian.",
+                  price: "$0.004 USDC",
+                  unit: "per page",
+                },
+                {
+                  name: "Image Optimizer",
+                  tag: "Media",
+                  tagColor: "text-blue-400 border-blue-400/30",
+                  uptime: "99.6%",
+                  desc: "Smart image conversion, compression, and background removal. WebP/AVIF/PNG/JPG.",
+                  price: "$0.001 USDC",
+                  unit: "per image",
+                },
+                {
+                  name: "Table Extractor",
+                  tag: "Data",
+                  tagColor: "text-orange-400 border-orange-400/30",
+                  uptime: "96.8%",
+                  desc: "Extract tables from PDFs and images to CSV or JSON. Ready for data pipelines.",
+                  price: "$0.003 USDC",
+                  unit: "per page",
+                },
+              ].map((svc) => (
+                <div key={svc.name} className="border border-white/10 bg-[#0d0f17] p-5 flex flex-col gap-3 hover:border-white/20 transition-colors">
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="font-mono font-bold text-slate-200 text-sm">{svc.name}</h3>
+                      <span className={`font-mono text-[10px] font-bold border px-2 py-0.5 mt-1 inline-block ${svc.tagColor}`}>
+                        {svc.tag}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500 whitespace-nowrap">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-green-400" />
+                      {svc.uptime} uptime
+                    </div>
+                  </div>
+                  <p className="font-mono text-xs text-slate-500 leading-relaxed">{svc.desc}</p>
+                  <div className="flex items-center justify-between pt-2 border-t border-white/5 text-xs">
+                    <span className="font-mono font-bold text-[#3b82f6]">{svc.price}</span>
+                    <span className="font-mono text-slate-600">{svc.unit}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-center font-mono text-xs text-slate-600">
+              All payments in USDC on Base · x402 protocol · Fully autonomous — no human approval required
+            </p>
+          </div>
+        </section>
+
+      </main>
+      <Footer />
     </>
   );
 }
