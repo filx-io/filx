@@ -1,21 +1,73 @@
 export function Footer() {
   return (
-    <footer className="border-t border-white/[0.06] py-10 px-6">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-        {/* Logo + tagline */}
-        <div className="flex items-center gap-3">
-          <span className="font-mono font-bold text-slate-300 tracking-wider">
-            <span className="text-[#3b82f6]">#</span> filx.io
-          </span>
-          <span className="text-slate-700 text-xs font-mono hidden sm:block">
-            / x402 file conversion infrastructure
-          </span>
+    <footer className="border-t border-white/[0.06] pt-12 pb-8 px-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Main footer grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-10 pb-10 border-b border-white/[0.06]">
+          {/* Left: Brand */}
+          <div className="space-y-3">
+            <div className="font-mono font-bold text-slate-200 text-lg tracking-wider">
+              <span className="text-[#3b82f6]">#</span> filx.io
+            </div>
+            <p className="font-mono text-slate-600 text-xs leading-relaxed">
+              x402 file conversion infrastructure.<br />
+              Built for AI agents. Powered by Base.
+            </p>
+            <p className="font-mono text-[10px] text-slate-700 uppercase tracking-widest">
+              x402 Protocol · Base Chain · USDC
+            </p>
+          </div>
+
+          {/* Center: Links */}
+          <div className="space-y-3">
+            <h4 className="font-mono text-[10px] text-slate-600 uppercase tracking-widest font-bold">Links</h4>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Docs", href: "https://api.filx.io/docs" },
+                { label: "GitHub", href: "https://github.com/filx-io/web" },
+                { label: "X / Twitter", href: "https://x.com/filx_io" },
+                { label: "API Status", href: "https://status.filx.io" },
+                { label: "Launch App", href: "https://app.filx.io" },
+                { label: "x402 Protocol", href: "https://x402.org" },
+              ].map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-xs text-slate-500 hover:text-slate-200 transition-colors"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: License + legal */}
+          <div className="space-y-3">
+            <h4 className="font-mono text-[10px] text-slate-600 uppercase tracking-widest font-bold">Legal</h4>
+            <p className="font-mono text-xs text-slate-600">
+              © 2025 FilX.io
+            </p>
+            <p className="font-mono text-xs text-slate-600">
+              MIT License
+            </p>
+            <p className="font-mono text-[10px] text-slate-700 leading-relaxed">
+              FilX is infrastructure software. Use responsibly.
+              $FILX tokens are not securities.
+            </p>
+          </div>
         </div>
 
-        {/* Copyright */}
-        <p className="font-mono text-xs text-slate-700">
-          © 2025 FilX.io · MIT License
-        </p>
+        {/* Bottom bar */}
+        <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
+          <p className="font-mono text-[11px] text-slate-600">
+            Built for agents, by agents.
+          </p>
+          <p className="font-mono text-[11px] text-slate-700">
+            x402 Protocol · Base Chain · USDC
+          </p>
+        </div>
       </div>
     </footer>
   );

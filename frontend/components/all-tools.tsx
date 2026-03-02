@@ -275,10 +275,10 @@ export function AllTools() {
             // api endpoints
           </p>
           <h2 className="font-mono font-black text-slate-200 text-2xl md:text-3xl uppercase tracking-widest">
-            All Tools
+            20 API ENDPOINTS
           </h2>
           <p className="font-mono text-slate-500 text-sm max-w-xl mx-auto">
-            20+ file processing endpoints. Each is a single POST request with x402 micropayment. No SDK required.
+            Every endpoint is a single POST request with x402 micropayment. No SDK. No accounts. Just HTTP.
           </p>
         </div>
 

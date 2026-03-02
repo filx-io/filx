@@ -7,7 +7,7 @@ const items = [
   {
     icon: "🗑️",
     title: "Auto-Delete",
-    body: "All files permanently deleted after 1 hour. No lingering copies.",
+    body: "All files permanently deleted after 1 hour. No lingering copies, no storage logs.",
   },
   {
     icon: "🚫",
@@ -15,14 +15,19 @@ const items = [
     body: "We never store your converted files long-term. Convert and it's gone.",
   },
   {
-    icon: "🔑",
-    title: "No Accounts",
-    body: "No registration, no API keys, no tracking. Just connect a wallet.",
+    icon: "🤖",
+    title: "Fully Programmatic",
+    body: "No human interaction required. Agents authenticate via on-chain payment — no accounts, no API keys, no humans in the loop.",
   },
   {
     icon: "⛓️",
     title: "On-Chain Payments",
-    body: "Transparent, verifiable payments on Base. Every transaction is auditable.",
+    body: "Transparent, verifiable payments on Base. Every transaction is publicly auditable.",
+  },
+  {
+    icon: "🔍",
+    title: "Open Source",
+    body: "Protocol and SDKs are open source. Audit the code, fork it, contribute.",
   },
 ];
 
@@ -30,18 +35,18 @@ export function Security() {
   return (
     <section className="py-20 px-4 border-t border-white/5">
       <div className="max-w-6xl mx-auto">
-        <h2 className="font-mono font-bold text-slate-200 text-2xl uppercase tracking-widest text-center mb-4">
+        <h2 className="font-mono font-bold text-slate-200 text-2xl uppercase tracking-widest text-center mb-3">
           Security &amp; Privacy
         </h2>
         <p className="font-mono text-slate-500 text-sm text-center mb-12">
-          Your files. Your keys. Your control.
+          Designed for agents. Zero human dependencies.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {items.map((item, i) => (
             <div
               key={i}
-              className="rounded-xl border border-white/10 bg-[#0d0f17] p-6 flex gap-4"
+              className="border border-white/10 bg-[#0d0f17] p-6 flex gap-4"
             >
               <span className="text-2xl flex-shrink-0 leading-none mt-0.5">
                 {item.icon}

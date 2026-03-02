@@ -1,16 +1,16 @@
 import { Navbar } from "@/components/navbar";
 import { Hero } from "@/components/hero";
-import { StatsBar } from "@/components/stats-bar";
+import { TerminalDemo } from "@/components/terminal-demo";
+import { Thesis } from "@/components/thesis";
 import { HowItWorks } from "@/components/how-it-works";
-import { X402Flow } from "@/components/x402-flow";
 import { AllTools } from "@/components/all-tools";
 import { AgentSnippet } from "@/components/agent-snippet";
-import { SupportedFormats } from "@/components/supported-formats";
-import { Features } from "@/components/features";
-import { AgentCallout } from "@/components/agent-callout";
-import { BankrIntegration } from "@/components/bankr-integration";
-import { Security } from "@/components/security";
+import { UseCases } from "@/components/use-cases";
+import { Integrations } from "@/components/integrations";
+import { Tokenomics } from "@/components/tokenomics";
+import { Roadmap } from "@/components/roadmap";
 import { PricingTable } from "@/components/pricing-table";
+import { Security } from "@/components/security";
 import { Footer } from "@/components/footer";
 
 export default function HomePage() {
@@ -18,17 +18,17 @@ export default function HomePage() {
     <main className="min-h-screen bg-[#08090d]">
       <Navbar />
       <Hero />
-      <StatsBar />
+      <TerminalDemo />
+      <Thesis />
       <HowItWorks />
-      <X402Flow />
       <AllTools />
       <AgentSnippet />
-      <SupportedFormats />
-      <Features />
-      <AgentCallout />
-      <BankrIntegration />
-      <Security />
+      <UseCases />
+      <Integrations />
+      <Tokenomics />
+      <Roadmap />
       <PricingTable />
+      <Security />
       <Footer />
     </main>
   );
