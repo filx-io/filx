@@ -10,13 +10,13 @@ import httpx, os
 
 API   = "https://api.filx.io"
 BANKR = "https://api.bankr.bot"
-KEY   = os.environ["BANKR_API_KEY"]  # bankr api-key (no private key!)
+KEY   = os.environ["FILX_API_KEY"]  # get with: export FILX_API_KEY=$(filx api-key)
 
 # Step 1 — call FliX
 res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
     json={"url": "https://example.com/document.pdf"})
 
-# Step 2 — Bankr signs the payment (Privy embedded wallet)
+# Step 2 — wallet signs the payment (Privy embedded wallet, no private key)
 if res.status_code == 402:
     signed = httpx.post(f"{BANKR}/v1/x402/sign",
         headers={"Authorization": f"Bearer {KEY}"},
@@ -34,9 +34,9 @@ if res.status_code == 402:
 import { createBankrSiwaSigner } from "@buildersgarden/siwa/signer";
 import { wrapFetch } from "@x402/fetch";
 
-// No private key — Bankr manages your agent wallet via Privy
+// No private key — wallet managed via Privy, no key in code
 const signer = await createBankrSiwaSigner({
-  apiKey: process.env.BANKR_API_KEY,  // bankr api-key
+  apiKey: process.env.FILX_API_KEY,  // get with: filx api-key
 });
 
 // wrapFetch auto-handles 402 → sign → retry
@@ -54,21 +54,20 @@ const result = await res.json();
 console.log(result.content);   // → "# Document Title..."
 console.log(result.cost_usdc); // → "0.008"`,
 
-  cli: `# Install Bankr CLI once
-npm install -g @bankr/cli
+  cli: `# Install FliX CLI once
+npm install -g @filx/cli
 
-# Login — creates embedded wallet via Privy (no private key)
-bankr login email you@example.com
+# Login — creates embedded agent wallet (no private key)
+filx login you@example.com
 
 # Check wallet & USDC balance on Base
-bankr whoami && bankr balance
+filx whoami && filx balance
 
-# Use FliX with your agent wallet
-bankr prompt "Convert https://example.com/doc.pdf to markdown \\
-  via api.filx.io/api/v1/pdf/to-markdown and pay with my wallet"
+# Natural language file conversion — pays automatically
+filx prompt "Convert https://example.com/doc.pdf to markdown"
 
 # For scripts: export API key
-export BANKR_API_KEY=$(bankr api-key)`,
+export FILX_API_KEY=$(filx api-key)`,
 
   curl: `# Step 1: Request → get 402 + payment details
 curl -i -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
@@ -77,8 +76,8 @@ curl -i -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
 # → HTTP/2 402
 # → PAYMENT-REQUIRED: eyJzY2hlbWUiOiJleGFjdCIs...
 
-# Step 2: Sign with Bankr CLI
-SIGNED=$(bankr sign-x402 "eyJzY2hlbWUiOiJleGFjdCIs...")
+# Step 2: Sign with FliX CLI
+SIGNED=$(filx sign-x402 "eyJzY2hlbWUiOiJleGFjdCIs...")
 
 # Step 3: Resend with payment proof
 curl -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
@@ -129,8 +128,8 @@ export function AgentSnippet() {
           <Shield className="w-4 h-4 text-green-400 flex-shrink-0" />
           <p className="font-mono text-xs text-slate-400 leading-relaxed">
             <strong className="text-green-400">No private key exposure.</strong>{" "}
-            Bankr uses <strong className="text-slate-300">Privy embedded wallets</strong> — your agent authenticates
-            with <code className="text-[#3b82f6]">BANKR_API_KEY</code>, a rotatable API credential. The underlying
+            Your agent wallet is secured via <strong className="text-slate-300">Privy embedded wallets</strong> — authenticate
+            with <code className="text-[#3b82f6]">FILX_API_KEY</code>, a rotatable credential. The underlying
             private key is never accessible to your code.
           </p>
         </div>
@@ -172,14 +171,13 @@ export function AgentSnippet() {
 
           <div className="border-t border-white/[0.06] px-4 py-2.5 flex items-center justify-between gap-2 bg-white/[0.01]">
             <span className="font-mono text-[10px] text-slate-600">
-              {lang === "bankr" && "pip install httpx  ·  export BANKR_API_KEY=$(bankr api-key)"}
-              {lang === "javascript" && "npm install @buildersgarden/siwa @x402/fetch"}
-              {lang === "cli" && "npm install -g @bankr/cli  ·  bankr login email you@example.com"}
-              {lang === "curl" && "requires: Bankr CLI for signing  ·  bankr sign-x402 <header>"}
+              {lang === "bankr" && "pip install httpx  ·  export FILX_API_KEY=$(filx api-key)"}
+              {lang === "javascript" && "npm install @buildersgarden/siwa @x402/fetch  ·  export FILX_API_KEY=$(filx api-key)"}
+              {lang === "cli" && "npm install -g @filx/cli  ·  filx login you@example.com"}
+              {lang === "curl" && "requires: FliX CLI for signing  ·  filx sign-x402 <header>"}
             </span>
-            <a href="https://bankr.bot" target="_blank" rel="noopener noreferrer"
-              className="font-mono text-[10px] text-[#3b82f6] hover:text-white transition-colors flex-shrink-0">
-              bankr.bot →
+            <a href="https://filx.io/docs" className="font-mono text-[10px] text-[#3b82f6] hover:text-white transition-colors flex-shrink-0">
+              filx.io/docs →
             </a>
           </div>
         </div>

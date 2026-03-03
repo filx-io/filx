@@ -1,0 +1,39 @@
+{
+  "name": "@filx/cli",
+  "version": "0.1.0",
+  "description": "FliX CLI — agent wallet, payments, and file conversion from your terminal",
+  "keywords": ["filx", "ai", "agent", "wallet", "x402", "usdc", "base", "cli"],
+  "homepage": "https://filx.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/filx-io/filx-io"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "filx": "./dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "commander": "^12.1.0",
+    "conf": "^13.0.0",
+    "ora": "^8.1.1",
+    "node-fetch": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

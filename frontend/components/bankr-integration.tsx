@@ -10,10 +10,10 @@ const PAYMENT_OPTIONS = [
   },
   {
     icon: "🤖",
-    title: "Bankr CLI",
-    desc: "Natural language payments. 'bankr prompt: pay X USDC to Y'. Ideal for scripted agents and pipelines.",
+    title: "FliX CLI",
+    desc: "Natural language conversions. 'filx prompt: convert doc.pdf to markdown'. Zero code — ideal for scripted agents and pipelines.",
     tag: "Zero Code",
-    href: "https://bankr.bot",
+    href: "https://filx.io/docs",
   },
   {
     icon: "🔗",
@@ -42,12 +42,12 @@ export function BankrIntegration() {
               // autonomous payments · no private keys
             </p>
             <h2 className="font-mono font-black text-slate-200 text-2xl md:text-3xl uppercase tracking-wider leading-tight">
-              Secure Agent Wallets via Bankr
+              Get Your Agent Wallet
             </h2>
             <p className="font-mono text-slate-400 text-sm leading-relaxed max-w-2xl">
               FliX payments are <strong className="text-slate-200">fully autonomous</strong> — no wallet popups,
               no private keys in code. Your agent authenticates with a{" "}
-              <code className="text-[#3b82f6]">BANKR_API_KEY</code> and Bankr handles signing via{" "}
+              <code className="text-[#3b82f6]">FILX_API_KEY</code> and we handle signing via{" "}
               <strong className="text-slate-200">Privy embedded wallets</strong>.
             </p>
           </div>
@@ -58,8 +58,8 @@ export function BankrIntegration() {
             <p className="font-mono text-xs text-slate-400 leading-relaxed">
               <strong className="text-green-400">Why no private key?</strong>{" "}
               Private keys in environment variables get leaked to logs, git history, CI/CD systems, and crash reports.
-              Bankr + Privy keeps the key server-side and gives your agent a rotatable{" "}
-              <code className="text-[#3b82f6]">BANKR_API_KEY</code> instead.
+              Your agent wallet is secured server-side — you get a rotatable{" "}
+              <code className="text-[#3b82f6]">FILX_API_KEY</code> instead.
             </p>
           </div>
 
@@ -117,7 +117,7 @@ export function BankrIntegration() {
 
 API   = "https://api.filx.io"
 BANKR = "https://api.bankr.bot"
-KEY   = os.environ["BANKR_API_KEY"]
+KEY   = os.environ["FILX_API_KEY"]  # filx api-key
 
 res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
     json={"url": "https://example.com/doc.pdf"})
