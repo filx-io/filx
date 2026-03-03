@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "API Docs | FliX — x402 File Converter for AI Agents",
+  title: "API Docs | FliX — x402 File Primitive",
   description:
-    "Full API reference for FliX. 20+ endpoints for PDF, image, OCR, and table extraction. No API keys — pay per request with USDC on Base via x402 protocol.",
+    "Full API reference for FliX — the x402 File Primitive. 20+ endpoints: PDF, OCR, image convert, table extract. No API keys — pay per request with USDC on Base.",
 };
 
 export default function DocsLayout({ children }: { children: React.ReactNode }) {

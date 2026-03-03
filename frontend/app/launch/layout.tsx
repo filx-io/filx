@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Launch App | FliX — x402 File Converter for AI Agents",
+  title: "Get Started | FliX — x402 File Primitive",
   description:
-    "Connect your agent and start converting files with USDC micropayments on Base. No accounts. No API keys. Just x402.",
+    "Connect your AI agent to the x402 File Primitive. Get your agent wallet, fund with USDC on Base, start converting files in minutes. No accounts. No API keys.",
 };
 
 export default function LaunchLayout({

@@ -360,7 +360,7 @@ export default function LaunchPage() {
         <section className="border-b border-white/5 py-12 px-6 text-center">
           <div className="max-w-2xl mx-auto space-y-4">
             <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold">
-              ✦ api.filx.io · x402 · USDC · Base
+              ✦ x402 FILE PRIMITIVE · USDC · BASE
             </p>
             <h1 className="font-mono font-black text-slate-100 text-3xl md:text-4xl uppercase tracking-widest leading-tight">
               Connect Your Agent in 2 Minutes
@@ -496,7 +496,7 @@ filx balance`}</pre>
                 <div className="flex items-center gap-2">
                   <span className="inline-block w-2 h-2 rounded-full bg-blue-500" />
                   <span className="font-mono text-[10px] text-[#3b82f6] uppercase tracking-widest font-bold">
-                    FliX Wallet · Base Mainnet · USDC · x402
+                    x402 File Primitive · Base Mainnet · USDC
                   </span>
                 </div>
                 <div className="flex items-center gap-2">

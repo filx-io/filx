@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "FliX — x402 File Converter for AI Agents";
+export const alt = "FliX — x402 File Primitive";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -49,7 +49,7 @@ export default function OgImage() {
               FliX
             </div>
             <div style={{ fontSize: 22, fontWeight: 700, color: "#3b82f6", letterSpacing: 4, textTransform: "uppercase" }}>
-              File Converter for AI Agents
+              x402 File Primitive
             </div>
           </div>
 

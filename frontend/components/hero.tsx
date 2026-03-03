@@ -22,21 +22,21 @@ export function Hero() {
         {/* Badge */}
         <div className="flex justify-center">
           <span className="font-mono text-[10px] font-bold text-[#3b82f6] uppercase tracking-widest border border-[#3b82f6]/40 px-4 py-1.5">
-            ✦ x402 PROTOCOL · BASE CHAIN · USDC
+            ✦ x402 FILE PRIMITIVE · BASE CHAIN · USDC
           </span>
         </div>
 
         {/* Main heading */}
         <div className="space-y-2">
           <h1 className="font-mono font-black text-4xl md:text-6xl tracking-widest uppercase text-slate-100 leading-tight">
-            THE FILE CONVERSION<br />
-            <span className="text-[#3b82f6]">PRIMITIVE FOR AI AGENTS</span>
+            THE x402<br />
+            <span className="text-[#3b82f6]">FILE PRIMITIVE</span>
           </h1>
         </div>
 
         {/* One-liner */}
         <p className="font-mono font-bold text-slate-300 text-base md:text-lg tracking-wide">
-          20+ endpoints. No API keys. No accounts. Just HTTP + micropayments.
+          20+ file conversion endpoints. No API keys. No accounts. Just HTTP + USDC.
         </p>
 
         {/* Body */}

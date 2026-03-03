@@ -23,7 +23,10 @@ export function Navbar() {
             height={32}
             className="rounded-sm"
           />
-          <span className="font-mono font-bold text-lg text-slate-200 tracking-wider">FliX</span>
+          <div className="flex flex-col leading-none">
+            <span className="font-mono font-bold text-base text-slate-200 tracking-wider">FliX</span>
+            <span className="font-mono text-[9px] text-slate-600 uppercase tracking-widest hidden sm:block">x402 File Primitive</span>
+          </div>
         </a>
 
         {/* Right side */}

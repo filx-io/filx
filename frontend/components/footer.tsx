@@ -19,8 +19,8 @@ export function Footer() {
               <span className="font-mono font-bold text-slate-200 text-lg tracking-wider">FliX</span>
             </div>
             <p className="font-mono text-slate-600 text-xs leading-relaxed">
-              x402 file conversion infrastructure.<br />
-              Built for AI agents. Powered by Base.
+              The x402 File Primitive for AI agents.<br />
+              Powered by Base. Settled in USDC.
             </p>
             <p className="font-mono text-[10px] text-slate-700 uppercase tracking-widest">
               x402 Protocol · Base Chain · USDC
@@ -70,7 +70,7 @@ export function Footer() {
               © 2026 FliX · MIT License
             </p>
             <p className="font-mono text-[10px] text-slate-700 leading-relaxed">
-              FliX is infrastructure software. Use responsibly.
+              The x402 File Primitive. Use responsibly.
             </p>
           </div>
         </div>
@@ -81,7 +81,7 @@ export function Footer() {
             Built for agents, by agents.
           </p>
           <p className="font-mono text-[11px] text-slate-700">
-            x402 Protocol · Base Chain · USDC
+            x402 File Primitive · Base Chain · USDC
           </p>
         </div>
       </div>

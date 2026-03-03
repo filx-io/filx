@@ -7,25 +7,43 @@ import { Toaster } from "sonner";
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "FliX — x402 File Converter for AI Agents", template: "%s | FilX.io" },
+  title: { default: "FliX — x402 File Primitive", template: "%s | FliX" },
   description:
-    "Convert any file with instant USDC micropayments on Base. PDF→Markdown, OCR, Image Convert, Table Extract. Built for AI agents (MCP, LangGraph, AutoGPT, CrewAI).",
-  keywords: ["file converter", "x402", "AI agents", "MCP", "USDC", "Base chain", "PDF", "OCR", "markdown"],
+    "The x402 File Primitive for AI agents. PDF→Markdown, OCR, Image Convert, Background Remove, Table Extract — 20+ endpoints. No API keys. No accounts. Pay per use with USDC on Base.",
+  keywords: [
+    "x402 file primitive",
+    "x402 protocol",
+    "file conversion AI agents",
+    "PDF to markdown",
+    "OCR API",
+    "image conversion API",
+    "USDC micropayments",
+    "Base chain",
+    "MCP tools",
+    "LangGraph",
+    "AI agent infrastructure",
+    "HTTP 402",
+    "machine-to-machine payments",
+    "filx",
+    "filx.io",
+  ],
   authors: [{ name: "FliX", url: "https://filx.io" }],
   creator: "FliX",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://filx.io",
-    title: "FliX — x402 File Converter for AI Agents",
-    description: "Convert any file with instant USDC micropayments on Base.",
+    title: "FliX — x402 File Primitive",
+    description:
+      "The x402 File Primitive for AI agents. 20+ file conversion endpoints. No API keys — pay per use with USDC on Base.",
     siteName: "FliX",
     images: [{ url: "https://filx.io/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "FliX — x402 File Converter for AI Agents",
-    description: "Convert any file with instant USDC micropayments on Base.",
+    title: "FliX — x402 File Primitive",
+    description:
+      "The x402 File Primitive for AI agents. 20+ file conversion endpoints. No API keys — pay per use with USDC on Base.",
     creator: "@filx_io",
     images: ["https://filx.io/opengraph-image"],
   },
