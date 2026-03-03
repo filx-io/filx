@@ -9,7 +9,7 @@ export function Hero() {
 
         {/* Terminal prompt */}
         <div className="flex justify-center">
-          <div className="bg-[#0a0c14] border border-white/10 rounded-md px-6 py-3 text-left inline-block">
+          <div className="bg-[#0a0c14] border border-white/10 px-6 py-3 text-left inline-block">
             <p className="font-mono text-green-400 text-sm">
               <span className="text-slate-500">&gt;</span> filx.convert(<span className="text-yellow-400">&quot;document.pdf&quot;</span>, <span className="text-yellow-400">&quot;markdown&quot;</span>)
             </p>
@@ -49,7 +49,7 @@ export function Hero() {
         {/* CTA buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
           <a
-            href={`${process.env.NEXT_PUBLIC_API_URL ?? "https://api.filx.io"}/docs`}
+            href="https://filx.io/docs"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-2.5 bg-[#3b82f6] text-white font-mono font-semibold text-sm tracking-wide hover:bg-[#2563eb] transition-colors"

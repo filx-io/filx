@@ -459,7 +459,7 @@ def make_payment_required(operation: str) -> dict:
 
 def x402_response(operation: str) -> JSONResponse:
     payload = make_payment_required(operation)
-    encoded = base64.b64encode(json.dumps(payload).encode()).decode()
+    encoded = base64.b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode()
     return JSONResponse(
         status_code=402,
         content={

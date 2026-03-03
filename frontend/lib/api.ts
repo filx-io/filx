@@ -1,164 +1,137 @@
-import axios, { type AxiosInstance } from "axios";
+/**
+ * FliX.io — API client helpers
+ * Base URL: https://api.filx.io
+ */
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://api.filx.io";
+export const API_BASE = "https://api.filx.io";
 
-export const api: AxiosInstance = axios.create({
-  baseURL: API_URL,
-  timeout: 30_000,
-  headers: { "Content-Type": "application/json" },
-});
+// ── Response Types ────────────────────────────────────────────
 
-// ── Types ─────────────────────────────────────────────────────
-
-export type ConversionType =
-  | "pdf_to_markdown"
-  | "pdf_to_markdown_ocr"
-  | "ocr_image"
-  | "image_convert"
-  | "image_bg_remove"
-  | "table_extract"
-  | "pdf_compress"
-  | "pdf_merge"
-  | "pdf_split"
-  | "pdf_rotate"
-  | "pdf_unlock";
-
-export type OutputFormat = "markdown" | "json" | "text" | "csv" | "png" | "jpg" | "webp" | "avif" | "pdf";
-
-export interface ConvertRequest {
-  url?: string;
-  to: OutputFormat;
-  from?: string;
-  options?: {
-    ocr?: boolean;
-    language?: "en" | "id" | "auto";
-    quality?: number;
-    width?: number;
-    height?: number;
-    compress?: boolean;
-  };
+export interface HealthResponse {
+  status: "ok";
+  service: string;
+  version: string;
 }
 
-export interface PaymentRequiredResponse {
-  error: "payment_required";
-  error_code: "X402_PAYMENT_REQUIRED";
-  job_id: string;
-  payment: {
-    amount: string;       // USDC micro-units (6 decimals)
-    amount_usd: string;   // human readable, e.g. "0.005"
-    currency: "USDC";
-    network: "base";
-    chain_id: number;
-    recipient: `0x${string}`;
-    expires_at: number;
-  };
-  estimate: {
-    pages?: number;
-    size_mb?: number;
-    duration_seconds?: number;
-  };
-}
-
-export interface JobResponse {
-  job_id: string;
-  status: "pending_payment" | "queued" | "processing" | "complete" | "failed";
-  result?: {
-    format: OutputFormat;
-    content?: string;
-    metadata?: Record<string, unknown>;
-  };
-  download_url?: string;
-  expires_at?: string;
-  cost?: { amount: string; currency: string; usd: string };
-  error?: string;
-  created_at: string;
-  updated_at: string;
+export interface PriceEntry {
+  amount: string;  // USDC amount as string, e.g. "0.002"
+  unit: string;    // e.g. "per page"
 }
 
 export interface PricingResponse {
-  currency: string;
-  network: string;
-  prices: Record<string, { amount: string; unit: string }>;
+  currency: "USDC";
+  network: "base";
+  chain_id: number;
+  decimals: number;
+  prices: Record<string, PriceEntry>;
   discounts: Record<string, string>;
+  notes: Record<string, string>;
 }
 
-// ── API Calls ────────────────────────────────────────────────
+export interface FileOutput {
+  url: string;        // Temporary download URL — expires in 1 hour
+  expires_at: string; // ISO 8601 timestamp
+}
+
+export interface TextOutput {
+  content: string;
+  pages_processed: number;
+  cost_usdc: string;
+}
+
+export interface CompressOutput extends FileOutput {
+  original_size: number;
+  compressed_size: number;
+  reduction_pct: number;
+}
+
+export interface ResizeOutput extends FileOutput {
+  width: number;
+  height: number;
+}
+
+export interface MultiFileOutput {
+  urls: string[];
+  expires_at: string;
+}
+
+export interface TableExtractOutput {
+  tables: Array<{
+    page: number;
+    headers: string[];
+    rows: string[][];
+  }>;
+  tables_found: number;
+  cost_usdc: string;
+}
+
+export interface OcrOutput {
+  text: string;
+  confidence: number;
+  cost_usdc: string;
+}
+
+/** x402 Payment Required response — returned when PAYMENT-SIGNATURE is missing */
+export interface PaymentRequiredError {
+  error: "payment_required";
+  operation: string;
+  amount: string;       // USDC human-readable, e.g. "0.002"
+  currency: "USDC";
+  network: "base";
+  message: string;
+  docs: string;
+}
+
+/** Decoded PAYMENT-REQUIRED header (base64 JSON) */
+export interface PaymentRequiredHeader {
+  scheme: "exact";
+  network: "base";
+  currency: "USDC";
+  amount: string;       // USDC micro-units (6 decimals), e.g. "2000" = $0.002
+  amount_usdc: string;  // human-readable, e.g. "0.002"
+  recipient: `0x${string}`;
+  operation: string;
+}
+
+export interface ApiError {
+  error: string;
+  message: string;
+}
+
+// ── Helpers ───────────────────────────────────────────────────
+
+/** Decode the PAYMENT-REQUIRED header from a 402 response */
+export function decodePaymentRequired(header: string): PaymentRequiredHeader {
+  return JSON.parse(atob(header)) as PaymentRequiredHeader;
+}
+
+/** Fetch with x402 handling — returns response or throws */
+export async function fetchApi(
+  path: string,
+  body: Record<string, unknown>,
+  paymentSignature?: string
+): Promise<Response> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (paymentSignature) {
+    headers["PAYMENT-SIGNATURE"] = paymentSignature;
+  }
+  return fetch(`${API_BASE}${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+}
 
 export async function getPricing(): Promise<PricingResponse> {
-  const { data } = await api.get("/api/v1/pricing");
-  return data;
+  const res = await fetch(`${API_BASE}/api/v1/pricing`);
+  if (!res.ok) throw new Error("Failed to fetch pricing");
+  return res.json();
 }
 
-export async function initiateConvert(
-  req: ConvertRequest,
-  file?: File
-): Promise<PaymentRequiredResponse | JobResponse> {
-  try {
-    if (file) {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("to", req.to);
-      if (req.options) form.append("options", JSON.stringify(req.options));
-      const { data } = await api.post("/api/v1/convert/upload", form, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      return data;
-    } else {
-      const { data } = await api.post("/api/v1/convert", req);
-      return data;
-    }
-  } catch (err: unknown) {
-    if (axios.isAxiosError(err) && err.response?.status === 402) {
-      return err.response.data as PaymentRequiredResponse;
-    }
-    throw err;
-  }
-}
-
-export async function submitWithPayment(
-  req: ConvertRequest,
-  jobId: string,
-  txHash: string,
-  file?: File
-): Promise<JobResponse> {
-  if (file) {
-    const form = new FormData();
-    form.append("file", file);
-    form.append("to", req.to);
-    if (req.options) form.append("options", JSON.stringify(req.options));
-    const { data } = await api.post("/api/v1/convert/upload", form, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-        "X-Payment-Tx": txHash,
-        "X-Payment-Job": jobId,
-      },
-    });
-    return data;
-  }
-  const { data } = await api.post("/api/v1/convert", req, {
-    headers: { "X-Payment-Tx": txHash, "X-Payment-Job": jobId },
-  });
-  return data;
-}
-
-export async function getJob(jobId: string): Promise<JobResponse> {
-  const { data } = await api.get(`/api/v1/jobs/${jobId}`);
-  return data;
-}
-
-export async function pollUntilDone(
-  jobId: string,
-  onUpdate?: (job: JobResponse) => void,
-  maxWaitMs = 120_000
-): Promise<JobResponse> {
-  const start = Date.now();
-  let delay = 1000;
-  while (Date.now() - start < maxWaitMs) {
-    const job = await getJob(jobId);
-    onUpdate?.(job);
-    if (job.status === "complete" || job.status === "failed") return job;
-    await new Promise((r) => setTimeout(r, delay));
-    delay = Math.min(delay * 1.5, 5000);
-  }
-  throw new Error("Job timed out");
+export async function getHealth(): Promise<HealthResponse> {
+  const res = await fetch(`${API_BASE}/health`);
+  if (!res.ok) throw new Error("API health check failed");
+  return res.json();
 }
