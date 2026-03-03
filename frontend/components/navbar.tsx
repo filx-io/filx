@@ -1,7 +1,16 @@
-import { Github, BookOpen } from "lucide-react";
+"use client";
+
+import { Github, BookOpen, ArrowLeft } from "lucide-react";
 import Image from "next/image";
+import { useEffect, useState } from "react";
 
 export function Navbar() {
+  const [isApp, setIsApp] = useState(false);
+
+  useEffect(() => {
+    setIsApp(window.location.hostname === "app.filx.io");
+  }, []);
+
   return (
     <header className="sticky top-0 z-50 border-b border-white/[0.06] bg-[#08090d]/90 backdrop-blur-md">
       <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-4">
@@ -44,7 +53,6 @@ export function Navbar() {
               Docs
             </a>
 
-
             {/* GitHub */}
             <a
               href="https://github.com/filx-io/web"
@@ -59,15 +67,23 @@ export function Navbar() {
 
           <div className="w-px h-4 bg-white/[0.06] hidden sm:block" />
 
-          {/* Launch App CTA */}
-          <a
-            href="https://app.filx.io"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-1.5 px-3 py-1.5 border border-[#3b82f6]/40 text-[#3b82f6] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#3b82f6]/10 transition-colors"
-          >
-            Launch App →
-          </a>
+          {/* CTA — Back when on app.filx.io, Launch App otherwise */}
+          {isApp ? (
+            <a
+              href="https://filx.io"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-white/[0.12] text-slate-400 font-mono text-xs font-bold uppercase tracking-wider hover:border-white/25 hover:text-slate-200 transition-colors"
+            >
+              <ArrowLeft className="w-3 h-3" />
+              filx.io
+            </a>
+          ) : (
+            <a
+              href="https://app.filx.io"
+              className="flex items-center gap-1.5 px-3 py-1.5 border border-[#3b82f6]/40 text-[#3b82f6] font-mono text-xs font-bold uppercase tracking-wider hover:bg-[#3b82f6]/10 transition-colors"
+            >
+              Launch App →
+            </a>
+          )}
         </div>
       </div>
     </header>
