@@ -98,6 +98,19 @@ export interface ApiError {
   message: string;
 }
 
+// ── Converter Types ───────────────────────────────────────────
+
+export type ConvertFormat = "markdown" | "json" | "text" | "csv" | "png" | "jpg" | "webp" | "pdf";
+
+export interface ConvertRequest {
+  /** Source: public URL or uploaded file URL */
+  url: string;
+  /** Target output format */
+  to: ConvertFormat;
+  /** Optional page range for PDFs, e.g. "1-5" */
+  pages?: string;
+}
+
 // ── Helpers ───────────────────────────────────────────────────
 
 /** Decode the PAYMENT-REQUIRED header from a 402 response */
