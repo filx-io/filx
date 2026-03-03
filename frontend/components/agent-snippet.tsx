@@ -5,7 +5,7 @@ import { Copy, Check, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SNIPPETS = {
-  bankr: `# pip install httpx
+  python: `# pip install httpx
 import httpx, os
 
 API = "https://api.filx.io"
@@ -96,16 +96,16 @@ curl -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
 type Lang = keyof typeof SNIPPETS;
 
 const TAB_LABELS: Record<Lang, string> = {
-  bankr:      "Python",
+  python:     "Python",
   javascript: "JavaScript",
   cli:        "FliX CLI",
   curl:       "cURL",
 };
 
-const TAB_ORDER: Lang[] = ["bankr", "javascript", "cli", "curl"];
+const TAB_ORDER: Lang[] = ["python", "javascript", "cli", "curl"];
 
 export function AgentSnippet() {
-  const [lang, setLang] = useState<Lang>("bankr");
+  const [lang, setLang] = useState<Lang>("python");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -177,7 +177,7 @@ export function AgentSnippet() {
 
           <div className="border-t border-white/[0.06] px-4 py-2.5 flex items-center justify-between gap-2 bg-white/[0.01]">
             <span className="font-mono text-[10px] text-slate-600">
-              {lang === "bankr" && "pip install httpx  ·  export FILX_API_KEY=$(filx api-key)"}
+              {lang === "python" && "pip install httpx  ·  export FILX_API_KEY=$(filx api-key)"}
               {lang === "javascript" && "native fetch only — no npm packages needed  ·  export FILX_API_KEY=$(filx api-key)"}
               {lang === "cli" && "npm install -g @filx/cli  ·  filx login you@example.com"}
               {lang === "curl" && "requires: FliX CLI for signing  ·  filx sign-x402 <header>"}
