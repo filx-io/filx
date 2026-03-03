@@ -102,6 +102,14 @@ export interface ApiError {
 
 export type ConvertFormat = "markdown" | "json" | "text" | "csv" | "png" | "jpg" | "webp" | "pdf";
 
+export interface ConvertOptions {
+  ocr?: boolean;
+  language?: "en" | "id" | "auto";
+  quality?: number;
+  width?: number;
+  height?: number;
+}
+
 export interface ConvertRequest {
   /** Source: public URL or uploaded file URL */
   url: string;
@@ -109,6 +117,24 @@ export interface ConvertRequest {
   to: ConvertFormat;
   /** Optional page range for PDFs, e.g. "1-5" */
   pages?: string;
+  /** Format-specific options */
+  options?: ConvertOptions;
+}
+
+export interface JobResult {
+  content?: string;
+  format?: string;
+  metadata?: Record<string, unknown>;
+}
+
+export interface JobResponse {
+  job_id: string;
+  status: "queued" | "processing" | "complete" | "error";
+  download_url?: string;
+  expires_at?: string;
+  result?: JobResult;
+  cost?: { usd: string };
+  error?: string;
 }
 
 // ── Helpers ───────────────────────────────────────────────────
