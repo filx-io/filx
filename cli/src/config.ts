@@ -1,7 +1,7 @@
 import Conf from "conf";
 
 interface FilxConfig {
-  bankrApiKey?: string;
+  apiKey?: string;
   walletAddress?: string;
   userEmail?: string;
 }
@@ -9,11 +9,10 @@ interface FilxConfig {
 export const config = new Conf<FilxConfig>({
   projectName: "filx-cli",
   schema: {
-    bankrApiKey: { type: "string" },
+    apiKey:        { type: "string" },
     walletAddress: { type: "string" },
-    userEmail: { type: "string" },
+    userEmail:     { type: "string" },
   },
 });
 
-export const BANKR_API = "https://api.bankr.bot";
 export const FILX_API = "https://api.filx.io";

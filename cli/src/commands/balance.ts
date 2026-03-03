@@ -1,13 +1,13 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
-import { getBalance } from "../bankr.js";
+import { getBalance } from "../api.js";
 import { config } from "../config.js";
 
 export const balanceCommand = new Command("balance")
   .description("Show USDC balance of your FliX agent wallet")
   .action(async () => {
-    const apiKey = config.get("bankrApiKey");
+    const apiKey = config.get("apiKey");
     if (!apiKey) {
       console.error(chalk.red("  Not logged in. Run: filx login <email>"));
       process.exit(1);

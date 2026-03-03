@@ -9,6 +9,8 @@ import json
 import os
 from typing import Any, Dict, List, Optional
 
+import httpx
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -32,7 +34,7 @@ for machine-to-machine micropayments over HTTP.
 ### How it works
 
 1. **POST** your request → server returns `HTTP 402 Payment Required` with a `PAYMENT-REQUIRED` header
-2. **Sign** a USDC micropayment on Base chain (via [Bankr](https://bankr.bot), your wallet, or any x402 SDK)
+2. **Sign** a USDC micropayment on Base chain (via [FliX Wallet](https://filx.io/docs#wallet), your own wallet, or any x402 SDK)
 3. **Resend** the request with `PAYMENT-SIGNATURE` header → get your converted file
 
 ### Quick Start (Python)
@@ -110,6 +112,10 @@ TAGS_METADATA = [
         "name": "Jobs",
         "description": "Job status and result retrieval.",
     },
+    {
+        "name": "Wallet",
+        "description": "**Agent wallet — auth, balance, and x402 signing.**\n\nCreate an embedded wallet via email. Sign x402 payments without private keys in your code.",
+    },
 ]
 
 
@@ -151,6 +157,7 @@ app.add_middleware(
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TREASURY_ADDRESS = os.getenv("TREASURY_ADDRESS", "0x0000000000000000000000000000000000000000")
+_WALLET_BACKEND  = os.getenv("WALLET_BACKEND_URL", "https://api.bankr.bot")  # internal — not exposed
 
 PRICING: Dict[str, Dict[str, str]] = {
     "pdf_to_markdown":   {"amount": "0.002", "unit": "per page"},
@@ -977,6 +984,193 @@ async def ocr_image(body: OcrImageRequest):
     **Pricing:** $0.003 USDC per image · paid via x402 on Base
     """
     return x402_response("ocr_image")
+
+
+# ── Wallet Proxy Schemas ──────────────────────────────────────────────────────
+
+class WalletLoginInitRequest(BaseModel):
+    email: str = Field(..., description="Email address to log in with.", examples=["you@example.com"])
+
+
+class WalletLoginVerifyRequest(BaseModel):
+    email: str  = Field(..., examples=["you@example.com"])
+    otp:   str  = Field(..., description="One-time password sent to your email.", examples=["123456"])
+    token: str  = Field(..., description="Token returned from the init step.")
+
+
+class WalletSignRequest(BaseModel):
+    payment_required: str = Field(
+        ...,
+        description="The raw value of the `PAYMENT-REQUIRED` response header from the 402 response.",
+        examples=["eyJzY2hlbWUiOiJleGFjdCIs..."],
+    )
+
+
+class WalletPromptRequest(BaseModel):
+    prompt:  str  = Field(..., description="Natural language instruction.", examples=["Convert https://example.com/doc.pdf to markdown"])
+    dry_run: bool = Field(False, description="If true, estimate cost without executing.")
+
+
+# ── Wallet Proxy Helpers ──────────────────────────────────────────────────────
+
+def _wallet_headers(request: Request) -> Dict[str, str]:
+    """Forward the caller's Authorization header to the wallet backend."""
+    auth = request.headers.get("authorization") or request.headers.get("Authorization")
+    headers: Dict[str, str] = {"Content-Type": "application/json"}
+    if auth:
+        headers["Authorization"] = auth
+    return headers
+
+
+async def _wallet_post(path: str, body: dict, headers: Dict[str, str]) -> JSONResponse:
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            res = await client.post(f"{_WALLET_BACKEND}{path}", json=body, headers=headers)
+        return JSONResponse(status_code=res.status_code, content=res.json())
+    except httpx.RequestError as exc:
+        return JSONResponse(status_code=503, content={"error": "wallet_unavailable", "message": str(exc)})
+
+
+async def _wallet_get(path: str, headers: Dict[str, str]) -> JSONResponse:
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            res = await client.get(f"{_WALLET_BACKEND}{path}", headers=headers)
+        return JSONResponse(status_code=res.status_code, content=res.json())
+    except httpx.RequestError as exc:
+        return JSONResponse(status_code=503, content={"error": "wallet_unavailable", "message": str(exc)})
+
+
+# ── Wallet ────────────────────────────────────────────────────────────────────
+
+@app.post(
+    "/api/v1/auth/login",
+    tags=["Wallet"],
+    summary="Initiate email login — get OTP",
+)
+async def wallet_login_init(body: WalletLoginInitRequest):
+    """
+    Start the login flow. Sends a one-time password to the provided email.
+
+    Returns a `token` to be used in the `/api/v1/auth/verify` step.
+    No Authorization header required.
+    """
+    return await _wallet_post("/v1/auth/email/init", body.model_dump(), {"Content-Type": "application/json"})
+
+
+@app.post(
+    "/api/v1/auth/verify",
+    tags=["Wallet"],
+    summary="Verify OTP — receive API key and wallet address",
+)
+async def wallet_login_verify(body: WalletLoginVerifyRequest):
+    """
+    Complete the login flow by submitting the OTP.
+
+    Returns:
+    - `api_key` — your `FILX_API_KEY`, store securely
+    - `wallet_address` — your embedded wallet on Base
+
+    The underlying wallet is secured by Privy. The private key is never accessible.
+    """
+    return await _wallet_post("/v1/auth/email/verify", body.model_dump(), {"Content-Type": "application/json"})
+
+
+@app.post(
+    "/api/v1/auth/api-key/rotate",
+    tags=["Wallet"],
+    summary="Rotate API key",
+)
+async def wallet_rotate_api_key(request: Request):
+    """
+    Rotate your `FILX_API_KEY`. The old key is immediately invalidated.
+
+    **Requires** `Authorization: Bearer <FILX_API_KEY>` header.
+    """
+    return await _wallet_post("/v1/auth/api-key/rotate", {}, _wallet_headers(request))
+
+
+@app.get(
+    "/api/v1/wallet/me",
+    tags=["Wallet"],
+    summary="Get wallet info",
+)
+async def wallet_me(request: Request):
+    """
+    Returns your wallet address and email.
+
+    **Requires** `Authorization: Bearer <FILX_API_KEY>` header.
+    """
+    return await _wallet_get("/v1/wallet/me", _wallet_headers(request))
+
+
+@app.get(
+    "/api/v1/wallet/balance",
+    tags=["Wallet"],
+    summary="Get wallet balance (USDC + ETH on Base)",
+)
+async def wallet_balance(request: Request):
+    """
+    Returns your current USDC and ETH balance on Base mainnet.
+
+    **Requires** `Authorization: Bearer <FILX_API_KEY>` header.
+
+    To fund your wallet: send USDC on Base to the address returned by `/api/v1/wallet/me`.
+    """
+    return await _wallet_get("/v1/wallet/balance", _wallet_headers(request))
+
+
+@app.post(
+    "/api/v1/wallet/sign",
+    tags=["Wallet"],
+    summary="Sign an x402 payment — for Python/JS agents",
+)
+async def wallet_sign(body: WalletSignRequest, request: Request):
+    """
+    Sign a `PAYMENT-REQUIRED` header value from a `402` response.
+
+    Returns `payment_signature` — include it as the `PAYMENT-SIGNATURE` header
+    when retrying the original request.
+
+    **Requires** `Authorization: Bearer <FILX_API_KEY>` header.
+
+    ### Python example
+    ```python
+    res = httpx.post("https://api.filx.io/api/v1/pdf/to-markdown",
+        json={"url": "https://example.com/doc.pdf"})
+
+    if res.status_code == 402:
+        signed = httpx.post("https://api.filx.io/api/v1/wallet/sign",
+            headers={"Authorization": f"Bearer {KEY}"},
+            json={"payment_required": res.headers["PAYMENT-REQUIRED"]}
+        ).json()["payment_signature"]
+
+        result = httpx.post("https://api.filx.io/api/v1/pdf/to-markdown",
+            json={"url": "https://example.com/doc.pdf"},
+            headers={"PAYMENT-SIGNATURE": signed}
+        ).json()
+    ```
+    """
+    return await _wallet_post("/v1/x402/sign", body.model_dump(), _wallet_headers(request))
+
+
+@app.post(
+    "/api/v1/wallet/prompt",
+    tags=["Wallet"],
+    summary="Natural language file conversion — auto-pays",
+)
+async def wallet_prompt(body: WalletPromptRequest, request: Request):
+    """
+    Describe what you want in plain English. FliX interprets the intent,
+    calls the right endpoint, and pays automatically from your agent wallet.
+
+    **Requires** `Authorization: Bearer <FILX_API_KEY>` header.
+
+    ### Example
+    ```
+    filx prompt "Convert https://example.com/doc.pdf to markdown"
+    ```
+    """
+    return await _wallet_post("/v1/prompt", body.model_dump(), _wallet_headers(request))
 
 
 # ── Jobs ──────────────────────────────────────────────────────────────────────

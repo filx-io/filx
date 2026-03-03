@@ -4,7 +4,7 @@ import { StatsBar } from "@/components/stats-bar";
 import { TerminalDemo } from "@/components/terminal-demo";
 import { Thesis } from "@/components/thesis";
 import { HowItWorks } from "@/components/how-it-works";
-import { BankrIntegration } from "@/components/bankr-integration";
+import { AgentWallet } from "@/components/bankr-integration";
 import { AllTools } from "@/components/all-tools";
 import { AgentSnippet } from "@/components/agent-snippet";
 import { UseCases } from "@/components/use-cases";
@@ -22,7 +22,7 @@ export default function HomePage() {
       <TerminalDemo />
       <Thesis />
       <HowItWorks />
-      <BankrIntegration />
+      <AgentWallet />
       <AllTools />
       <AgentSnippet />
       <UseCases />

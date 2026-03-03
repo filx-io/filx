@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
-import { sendPrompt } from "../bankr.js";
+import { sendPrompt } from "../api.js";
 import { config } from "../config.js";
 
 export const promptCommand = new Command("prompt")
@@ -19,7 +19,7 @@ Examples:
 `
   )
   .action(async (text: string, opts: { dryRun?: boolean; json?: boolean }) => {
-    const apiKey = config.get("bankrApiKey");
+    const apiKey = config.get("apiKey");
     if (!apiKey) {
       console.error(chalk.red("  Not logged in. Run: filx login <email>"));
       process.exit(1);

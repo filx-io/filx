@@ -8,51 +8,57 @@ const SNIPPETS = {
   bankr: `# pip install httpx
 import httpx, os
 
-API   = "https://api.filx.io"
-BANKR = "https://api.bankr.bot"
-KEY   = os.environ["FILX_API_KEY"]  # get with: export FILX_API_KEY=$(filx api-key)
+API = "https://api.filx.io"
+KEY = os.environ["FILX_API_KEY"]  # filx login → filx api-key
 
 # Step 1 — call FliX
 res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
     json={"url": "https://example.com/document.pdf"})
 
-# Step 2 — wallet signs the payment (Privy embedded wallet, no private key)
+# Step 2 — FliX wallet signs the payment (no private key in code)
 if res.status_code == 402:
-    signed = httpx.post(f"{BANKR}/v1/x402/sign",
+    signed = httpx.post(f"{API}/api/v1/wallet/sign",
         headers={"Authorization": f"Bearer {KEY}"},
         json={"payment_required": res.headers["PAYMENT-REQUIRED"]}
     ).json()["payment_signature"]
 
-    # Step 3 — resend with proof
+    # Step 3 — resend with payment proof
     result = httpx.post(f"{API}/api/v1/pdf/to-markdown",
         json={"url": "https://example.com/document.pdf"},
         headers={"PAYMENT-SIGNATURE": signed}
     ).json()
     print(result["content"])  # → "# Document Title\\n\\n..."`,
 
-  javascript: `// npm install @buildersgarden/siwa @x402/fetch
-import { createBankrSiwaSigner } from "@buildersgarden/siwa/signer";
-import { wrapFetch } from "@x402/fetch";
+  javascript: `// No npm packages needed — just native fetch
+const API = "https://api.filx.io";
+const KEY = process.env.FILX_API_KEY; // filx login → filx api-key
 
-// No private key — wallet managed via Privy, no key in code
-const signer = await createBankrSiwaSigner({
-  apiKey: process.env.FILX_API_KEY,  // get with: filx api-key
+// Step 1 — call FliX
+const res = await fetch(\`\${API}/api/v1/pdf/to-markdown\`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ url: "https://example.com/doc.pdf" }),
 });
 
-// wrapFetch auto-handles 402 → sign → retry
-const fetchWithPayment = wrapFetch(fetch, signer);
-
-const res = await fetchWithPayment(
-  "https://api.filx.io/api/v1/pdf/to-markdown",
-  {
+// Step 2 — FliX wallet signs the payment (no private key in code)
+if (res.status === 402) {
+  const paymentRequired = res.headers.get("PAYMENT-REQUIRED");
+  const { payment_signature } = await fetch(\`\${API}/api/v1/wallet/sign\`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Authorization": \`Bearer \${KEY}\`, "Content-Type": "application/json" },
+    body: JSON.stringify({ payment_required: paymentRequired }),
+  }).then(r => r.json());
+
+  // Step 3 — resend with payment proof
+  const result = await fetch(\`\${API}/api/v1/pdf/to-markdown\`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "PAYMENT-SIGNATURE": payment_signature },
     body: JSON.stringify({ url: "https://example.com/doc.pdf" }),
-  }
-);
-const result = await res.json();
-console.log(result.content);   // → "# Document Title..."
-console.log(result.cost_usdc); // → "0.008"`,
+  }).then(r => r.json());
+
+  console.log(result.content);   // → "# Document Title..."
+  console.log(result.cost_usdc); // → "0.008"
+}`,
 
   cli: `# Install FliX CLI once
 npm install -g @filx/cli
@@ -90,9 +96,9 @@ curl -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
 type Lang = keyof typeof SNIPPETS;
 
 const TAB_LABELS: Record<Lang, string> = {
-  bankr:      "Python + Bankr",
+  bankr:      "Python",
   javascript: "JavaScript",
-  cli:        "Bankr CLI",
+  cli:        "FliX CLI",
   curl:       "cURL",
 };
 
@@ -119,7 +125,7 @@ export function AgentSnippet() {
             Built for AI Agents
           </h2>
           <p className="font-mono text-slate-500 text-sm">
-            No private keys in your code. Bankr handles wallet + signing — your agent just calls the API.
+            No private keys in your code. Your agent wallet signs payments — one API, everything FliX.
           </p>
         </div>
 
@@ -172,7 +178,7 @@ export function AgentSnippet() {
           <div className="border-t border-white/[0.06] px-4 py-2.5 flex items-center justify-between gap-2 bg-white/[0.01]">
             <span className="font-mono text-[10px] text-slate-600">
               {lang === "bankr" && "pip install httpx  ·  export FILX_API_KEY=$(filx api-key)"}
-              {lang === "javascript" && "npm install @buildersgarden/siwa @x402/fetch  ·  export FILX_API_KEY=$(filx api-key)"}
+              {lang === "javascript" && "native fetch only — no npm packages needed  ·  export FILX_API_KEY=$(filx api-key)"}
               {lang === "cli" && "npm install -g @filx/cli  ·  filx login you@example.com"}
               {lang === "curl" && "requires: FliX CLI for signing  ·  filx sign-x402 <header>"}
             </span>

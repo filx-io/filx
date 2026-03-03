@@ -1,13 +1,13 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
-import { getWhoami } from "../bankr.js";
+import { getWhoami } from "../api.js";
 import { config } from "../config.js";
 
 export const whoamiCommand = new Command("whoami")
   .description("Show your FliX agent wallet info")
   .action(async () => {
-    const apiKey = config.get("bankrApiKey");
+    const apiKey = config.get("apiKey");
     if (!apiKey) {
       console.error(chalk.red("  Not logged in. Run: filx login <email>"));
       process.exit(1);

@@ -81,7 +81,7 @@ export default function OgImage() {
           padding: "16px 48px", display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           <div style={{ fontSize: 13, color: "#334155", letterSpacing: 2 }}>filx.io</div>
-          <div style={{ fontSize: 12, color: "#334155", letterSpacing: 1 }}>Powered by x402 · Bankr · Base</div>
+          <div style={{ fontSize: 12, color: "#334155", letterSpacing: 1 }}>Powered by x402 · FliX Wallet · Base</div>
         </div>
       </div>
     ),

@@ -2,7 +2,7 @@ import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
 import * as readline from "readline";
-import { initiateLogin, verifyOtp } from "../bankr.js";
+import { initiateLogin, verifyOtp } from "../api.js";
 import { config } from "../config.js";
 
 function prompt(question: string): Promise<string> {
@@ -43,7 +43,7 @@ export const loginCommand = new Command("login")
     try {
       const { api_key, wallet_address } = await verifyOtp(email, otp, token);
 
-      config.set("bankrApiKey", api_key);
+      config.set("apiKey", api_key);
       config.set("walletAddress", wallet_address);
       config.set("userEmail", email);
 

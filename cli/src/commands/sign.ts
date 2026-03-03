@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
-import { signX402 } from "../bankr.js";
+import { signX402 } from "../api.js";
 import { config } from "../config.js";
 
 export const signCommand = new Command("sign-x402")
@@ -18,7 +18,7 @@ Example (in a shell script):
 `
   )
   .action(async (header: string) => {
-    const apiKey = config.get("bankrApiKey");
+    const apiKey = config.get("apiKey");
     if (!apiKey) {
       console.error(chalk.red("  Not logged in. Run: filx login <email>"));
       process.exit(1);

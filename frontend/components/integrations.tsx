@@ -10,11 +10,11 @@ const INTEGRATIONS = [
   },
   {
     icon: "🤖",
-    name: "Bankr",
+    name: "FliX Wallet",
     role: "Agent Wallet",
-    desc: "Custodial wallet built for agents. Natural language payment signing. No private key management required.",
-    href: "https://bankr.bot",
-    badge: "CUSTODIAL",
+    desc: "Embedded wallet built for agents. Natural language payment signing. No private key management required.",
+    href: "https://filx.io/docs#wallet",
+    badge: "EMBEDDED",
     badgeColor: "text-purple-400 border-purple-400/30",
   },
   {

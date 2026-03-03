@@ -1,14 +1,14 @@
 import { Command } from "commander";
 import chalk from "chalk";
 import ora from "ora";
-import { rotateApiKey } from "../bankr.js";
+import { rotateApiKey } from "../api.js";
 import { config } from "../config.js";
 
 export const apiKeyCommand = new Command("api-key")
   .description("Print your FILX_API_KEY (for use in scripts and agents)")
   .option("--rotate", "Rotate to a new API key")
   .action(async (opts: { rotate?: boolean }) => {
-    const apiKey = config.get("bankrApiKey");
+    const apiKey = config.get("apiKey");
     if (!apiKey) {
       console.error(chalk.red("  Not logged in. Run: filx login <email>"));
       process.exit(1);
@@ -18,7 +18,7 @@ export const apiKeyCommand = new Command("api-key")
       const spinner = ora("Rotating API key…").start();
       try {
         const newKey = await rotateApiKey();
-        config.set("bankrApiKey", newKey);
+        config.set("apiKey", newKey);
         spinner.succeed("API key rotated.");
         console.log(newKey);
       } catch (err) {

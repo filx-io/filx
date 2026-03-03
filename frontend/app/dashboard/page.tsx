@@ -68,7 +68,7 @@ export default function DashboardPage() {
           <p className="font-mono text-xs text-slate-400 leading-relaxed">
             <strong className="text-green-400">No API key needed.</strong>{" "}
             Authentication is handled via the <strong className="text-slate-200">x402 protocol</strong> — pay per request with USDC on Base.
-            Use <strong className="text-slate-200">Bankr</strong> for agent wallet signing (no private key exposure).
+            Use your <strong className="text-slate-200">FliX agent wallet</strong> for signing (no private key exposure).
             See <a href="https://filx.io/docs" className="text-[#3b82f6] hover:text-white transition-colors">filx.io/docs</a> for full integration guide.
           </p>
         </div>
