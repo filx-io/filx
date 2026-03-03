@@ -6,10 +6,17 @@ export function middleware(request: NextRequest) {
   // app.filx.io → rewrite to /launch
   if (hostname.startsWith("app.")) {
     const url = request.nextUrl.clone();
-
-    // If visiting app.filx.io/ → show /launch page
     if (url.pathname === "/" || url.pathname === "") {
       url.pathname = "/launch";
+      return NextResponse.rewrite(url);
+    }
+  }
+
+  // status.filx.io → rewrite to /status
+  if (hostname.startsWith("status.")) {
+    const url = request.nextUrl.clone();
+    if (url.pathname === "/" || url.pathname === "") {
+      url.pathname = "/status";
       return NextResponse.rewrite(url);
     }
   }
