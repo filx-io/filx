@@ -35,7 +35,6 @@ export function Footer() {
                 { label: "Docs", href: "https://filx.io/docs" },
                 { label: "GitHub", href: "https://github.com/filx-io/web" },
                 { label: "X / Twitter", href: "https://x.com/filx_io" },
-                { label: "API Status", href: "https://status.filx.io" },
                 { label: "Launch App", href: "https://app.filx.io" },
                 { label: "x402 Protocol", href: "https://x402.org" },
               ].map((link) => (

@@ -557,10 +557,6 @@ export default function DocsPage() {
           className="flex items-center gap-1.5 font-mono text-[10px] text-slate-600 hover:text-slate-300 transition-colors">
           Swagger UI <ExternalLink className="w-3 h-3" />
         </a>
-        <a href="https://status.filx.io" target="_blank" rel="noopener noreferrer"
-          className="flex items-center gap-1.5 font-mono text-[10px] text-slate-600 hover:text-slate-300 transition-colors mt-2">
-          API Status <ExternalLink className="w-3 h-3" />
-        </a>
       </div>
     </>
   );

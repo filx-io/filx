@@ -12,15 +12,6 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  // status.filx.io → rewrite to /status
-  if (hostname.startsWith("status.")) {
-    const url = request.nextUrl.clone();
-    if (url.pathname === "/" || url.pathname === "") {
-      url.pathname = "/status";
-      return NextResponse.rewrite(url);
-    }
-  }
-
   return NextResponse.next();
 }
 
