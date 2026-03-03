@@ -8,6 +8,7 @@ import {
   Shield, Clock, Zap, FileText, Lock,
 } from "lucide-react";
 
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type Endpoint = {
@@ -811,79 +812,102 @@ PAYMENT-RESPONSE: eyJzZXR0bGVk...
               </p>
 
               <div className="space-y-3">
-                <CodeBlock lang="Python — x402 SDK" code={`# pip install x402
-from x402 import Client
+                <div className="border border-green-400/20 bg-green-400/5 p-4 flex items-start gap-3">
+                  <Shield className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-mono font-bold text-green-400 text-xs">No private keys required</p>
+                    <p className="font-mono text-xs text-slate-400 leading-relaxed">
+                      FliX uses <a href="https://bankr.bot" target="_blank" rel="noopener noreferrer" className="text-[#3b82f6] hover:text-white">Bankr</a> for agent wallet management.
+                      Your agent authenticates with a <code className="text-[#3b82f6]">BANKR_API_KEY</code> — no private key ever touches your code.
+                      Bankr uses <strong className="text-slate-300">Privy embedded wallets</strong> under the hood.
+                    </p>
+                  </div>
+                </div>
 
-client = Client(wallet_private_key="0x...")
+                <CodeBlock lang="Setup — Bankr CLI (run once)" code={`# Install Bankr CLI
+npm install -g @bankr/cli
 
-# x402 handles 402 → sign → retry automatically
-result = client.post(
-    "https://api.filx.io/api/v1/pdf/to-markdown",
-    json={"url": "https://example.com/document.pdf"}
-)
-print(result.json())
-# {"content": "# Document Title\\n\\n...", "pages_processed": 4}`} />
+# Login — Bankr creates an embedded wallet for your agent via Privy
+bankr login email you@example.com
 
-                <CodeBlock lang="JavaScript / TypeScript — x402 SDK" code={`// npm install @x402/fetch viem
-import { wrapFetch } from "@x402/fetch";
-import { createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { base } from "viem/chains";
+# Export your API key (store in .env — never commit to git)
+export BANKR_API_KEY=$(bankr api-key)
 
-const account = privateKeyToAccount("0x...");
-const walletClient = createWalletClient({ account, chain: base, transport: http() });
-const fetchWithPayment = wrapFetch(fetch, walletClient);
+# Fund your wallet with USDC on Base
+bankr balance  # shows your wallet address
+# Send USDC to that address from Coinbase or any Base wallet`} />
 
-const res = await fetchWithPayment("https://api.filx.io/api/v1/pdf/to-markdown", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({ url: "https://example.com/doc.pdf" }),
-});
-const data = await res.json();
-// { content: "# Document Title\\n\\n...", pages_processed: 4 }`} />
-
-                <CodeBlock lang="Python — Bankr (no private key)" code={`# No wallet setup needed — Bankr handles everything
-import httpx
+                <CodeBlock lang="Python — Bankr (recommended)" code={`# pip install httpx
+import httpx, os
 
 API   = "https://api.filx.io"
 BANKR = "https://api.bankr.bot"
+KEY   = os.environ["BANKR_API_KEY"]  # from: bankr api-key
 
-# Step 1: Initial request → get 402
+# Step 1 — call FliX (get 402 payment request)
 res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
-    json={"url": "https://example.com/doc.pdf"})
+    json={"url": "https://example.com/document.pdf"})
 
+# Step 2 — Bankr signs the payment (no private key needed)
 if res.status_code == 402:
     payment_req = res.headers["PAYMENT-REQUIRED"]
+    signed = httpx.post(f"{BANKR}/v1/x402/sign",
+        headers={"Authorization": f"Bearer {KEY}"},
+        json={"payment_required": payment_req}
+    ).json()["payment_signature"]
 
-    # Step 2: Sign via Bankr (custodial — no key needed)
-    job = httpx.post(f"{BANKR}/agent/prompt",
-        headers={"X-API-Key": "YOUR_BANKR_KEY"},
-        json={"prompt": f"sign x402 payment: {payment_req}"}
-    ).json()
-    signed = job["result"]["signature"]
-
-    # Step 3: Resend with payment
+    # Step 3 — resend with payment proof
     result = httpx.post(f"{API}/api/v1/pdf/to-markdown",
-        json={"url": "https://example.com/doc.pdf"},
+        json={"url": "https://example.com/document.pdf"},
         headers={"PAYMENT-SIGNATURE": signed}
     ).json()
-    print(result["content"])`} />
+    print(result["content"])   # → "# Document Title\\n\\n..."
+    print(result["cost_usdc"]) # → "0.008"`} />
 
-                <CodeBlock lang="cURL — manual flow" code={`# Step 1: Get payment requirement
+                <CodeBlock lang="JavaScript / TypeScript — Bankr (recommended)" code={`// npm install @buildersgarden/siwa @x402/fetch
+import { createBankrSiwaSigner } from "@buildersgarden/siwa/signer";
+import { wrapFetch } from "@x402/fetch";
+
+// No private key — Bankr manages your agent wallet via Privy
+const signer = await createBankrSiwaSigner({
+  apiKey: process.env.BANKR_API_KEY,  // from: bankr api-key
+});
+
+// wrapFetch intercepts 402 → signs via Bankr → retries automatically
+const fetchWithPayment = wrapFetch(fetch, signer);
+
+const res = await fetchWithPayment(
+  "https://api.filx.io/api/v1/pdf/to-markdown",
+  {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url: "https://example.com/doc.pdf" }),
+  }
+);
+const data = await res.json();
+// { content: "# Document Title\\n\\n...", pages_processed: 4, cost_usdc: "0.008" }`} />
+
+                <CodeBlock lang="Bankr CLI — zero code needed" code={`# Your agent can call FliX directly via Bankr CLI
+bankr prompt "Call POST https://api.filx.io/api/v1/pdf/to-markdown \\
+  with body {url: 'https://example.com/doc.pdf'} and pay with my wallet"
+
+# Or set an alias for your agent workflow
+bankr prompt "Convert https://arxiv.org/pdf/2312.00001.pdf to markdown and save the result"`} />
+
+                <CodeBlock lang="cURL — manual flow (advanced)" code={`# Step 1: Get payment requirement
 curl -i -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://example.com/doc.pdf"}'
 # → HTTP 402 Payment Required
 # → PAYMENT-REQUIRED: eyJzY2hlbWUiOiJleGFjdCIsIm5...
 
-# Step 2: Sign and resend (replace with your signed payload)
+# Step 2: Sign with Bankr CLI and resend
+SIGNED=$(bankr sign-x402 "eyJzY2hlbWUiOiJleGFjdCIsIm5...")
 curl -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
   -H "Content-Type: application/json" \\
-  -H "PAYMENT-SIGNATURE: eyJ0eEhhc2giOiIweGFiY2Qx..." \\
+  -H "PAYMENT-SIGNATURE: $SIGNED" \\
   -d '{"url": "https://example.com/doc.pdf"}'
-# → HTTP 200 OK
-# → PAYMENT-RESPONSE: eyJzZXR0bGVkIjp0cnVlLCJ0eFQ...
-# → {"content": "# Document Title\\n\\n..."}`} />
+# → HTTP 200 OK → {"content": "# Document Title..."}`} />
               </div>
             </div>
 
@@ -895,12 +919,12 @@ curl -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
                 {/* SDK cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
-                    { name: "x402 Python SDK",   desc: "Official client. Auto-handles 402 → sign → retry.",      badge: "pip install x402",          href: "https://github.com/coinbase/x402", lang: "Python" },
-                    { name: "x402 JS/TS SDK",     desc: "wrapFetch wrapper for JavaScript/TypeScript agents.",    badge: "npm install @x402/fetch",   href: "https://github.com/coinbase/x402", lang: "JS/TS" },
-                    { name: "Bankr Agent API",    desc: "Custodial signing — no private key needed.",             badge: "Custodial",                   href: "https://bankr.bot",                lang: "Any" },
-                    { name: "MCP Tool Manifest",  desc: "Plug FliX into Claude, GPT, Gemini via MCP natively.",  badge: "Native MCP",                  href: "https://api.filx.io/mcp",          lang: "MCP" },
-                    { name: "LangChain / LangGraph", desc: "Python SDK with x402 built-in for pipeline agents.", badge: "Python SDK",                   href: "https://www.langchain.com",        lang: "Python" },
-                    { name: "Any HTTP Client",    desc: "curl, httpx, fetch, axios — zero SDK required.",        badge: "Universal",                   href: "#quickstart",                      lang: "Any" },
+                    { name: "Bankr CLI",           desc: "Recommended. No private key. Agent wallet via Privy. npm install -g @bankr/cli", badge: "⭐ Recommended",             href: "https://bankr.bot",                lang: "Any" },
+                    { name: "Bankr SIWA Signer",   desc: "JS/TS signer using BANKR_API_KEY. Works with wrapFetch for x402.",              badge: "No Private Key",             href: "https://skills.bankr.bot",         lang: "JS/TS" },
+                    { name: "x402 JS/TS SDK",       desc: "wrapFetch wrapper — pair with Bankr signer or own wallet.",                    badge: "npm install @x402/fetch",    href: "https://github.com/coinbase/x402", lang: "JS/TS" },
+                    { name: "MCP Tool Manifest",    desc: "Plug FliX into Claude, GPT, Gemini via MCP natively.",                        badge: "Native MCP",                  href: "https://api.filx.io/mcp",          lang: "MCP" },
+                    { name: "LangChain / LangGraph","desc": "Python pipeline agents — use httpx + Bankr API key for signing.",            badge: "Python",                      href: "https://www.langchain.com",        lang: "Python" },
+                    { name: "Any HTTP Client",      desc: "curl, httpx, fetch, axios — zero SDK. Pair with Bankr for signing.",           badge: "Universal",                   href: "#quickstart",                      lang: "Any" },
                   ].map((sdk) => (
                     <a key={sdk.name} href={sdk.href}
                       target={sdk.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
@@ -918,21 +942,33 @@ curl -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
                 </div>
 
                 {/* LangGraph example */}
-                <CodeBlock lang="LangGraph — PDF research pipeline" code={`from langgraph.graph import StateGraph
-from x402 import Client
+                <CodeBlock lang="LangGraph — PDF research pipeline (Bankr, no private key)" code={`# pip install langgraph httpx
+import httpx, os
+from langgraph.graph import StateGraph
 from typing import TypedDict
 
-client = Client(wallet_private_key="0x...")
+API   = "https://api.filx.io"
+BANKR = "https://api.bankr.bot"
+KEY   = os.environ["BANKR_API_KEY"]  # bankr api-key — no private key!
+
+def sign_x402(payment_required: str) -> str:
+    return httpx.post(f"{BANKR}/v1/x402/sign",
+        headers={"Authorization": f"Bearer {KEY}"},
+        json={"payment_required": payment_required}
+    ).json()["payment_signature"]
 
 class State(TypedDict):
     pdf_url: str
     markdown: str
 
 def fetch_pdf(state: State) -> State:
-    res = client.post(
-        "https://api.filx.io/api/v1/pdf/to-markdown",
-        json={"url": state["pdf_url"]}
-    )
+    res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
+        json={"url": state["pdf_url"]})
+    if res.status_code == 402:
+        signed = sign_x402(res.headers["PAYMENT-REQUIRED"])
+        res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
+            json={"url": state["pdf_url"]},
+            headers={"PAYMENT-SIGNATURE": signed})
     return {"markdown": res.json()["content"]}
 
 graph = StateGraph(State)

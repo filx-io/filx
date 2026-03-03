@@ -1,35 +1,46 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Check } from "lucide-react";
+import { Copy, Check, Shield } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const SNIPPETS = {
-  python: `from x402 import Client
+  bankr: `# pip install httpx
+import httpx, os
 
-client = Client(wallet_private_key="0x...")
+API   = "https://api.filx.io"
+BANKR = "https://api.bankr.bot"
+KEY   = os.environ["BANKR_API_KEY"]  # bankr api-key (no private key!)
 
-# One-liner: x402 handles 402 → sign → retry automatically
-result = client.post(
-    "https://api.filx.io/api/v1/pdf/to-markdown",
-    json={"url": "https://example.com/document.pdf"}
-)
-print(result.json())  # {"content": "# Document..."}`,
+# Step 1 — call FliX
+res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
+    json={"url": "https://example.com/document.pdf"})
 
-  javascript: `import { wrapFetch } from "@x402/fetch";
-import { createWalletClient, http } from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { base } from "viem/chains";
+# Step 2 — Bankr signs the payment (Privy embedded wallet)
+if res.status_code == 402:
+    signed = httpx.post(f"{BANKR}/v1/x402/sign",
+        headers={"Authorization": f"Bearer {KEY}"},
+        json={"payment_required": res.headers["PAYMENT-REQUIRED"]}
+    ).json()["payment_signature"]
 
-const account = privateKeyToAccount("0x...");
-const walletClient = createWalletClient({
-  account,
-  chain: base,
-  transport: http(),
+    # Step 3 — resend with proof
+    result = httpx.post(f"{API}/api/v1/pdf/to-markdown",
+        json={"url": "https://example.com/document.pdf"},
+        headers={"PAYMENT-SIGNATURE": signed}
+    ).json()
+    print(result["content"])  # → "# Document Title\\n\\n..."`,
+
+  javascript: `// npm install @buildersgarden/siwa @x402/fetch
+import { createBankrSiwaSigner } from "@buildersgarden/siwa/signer";
+import { wrapFetch } from "@x402/fetch";
+
+// No private key — Bankr manages your agent wallet via Privy
+const signer = await createBankrSiwaSigner({
+  apiKey: process.env.BANKR_API_KEY,  // bankr api-key
 });
 
-// x402 wraps fetch: handles 402 → sign → retry automatically
-const fetchWithPayment = wrapFetch(fetch, walletClient);
+// wrapFetch auto-handles 402 → sign → retry
+const fetchWithPayment = wrapFetch(fetch, signer);
 
 const res = await fetchWithPayment(
   "https://api.filx.io/api/v1/pdf/to-markdown",
@@ -40,66 +51,56 @@ const res = await fetchWithPayment(
   }
 );
 const result = await res.json();
-console.log(result);  // { content: "# Document..." }`,
+console.log(result.content);   // → "# Document Title..."
+console.log(result.cost_usdc); // → "0.008"`,
 
-  bankr: `import httpx
+  cli: `# Install Bankr CLI once
+npm install -g @bankr/cli
 
-API = "https://api.filx.io"
-BANKR = "https://api.bankr.bot"
+# Login — creates embedded wallet via Privy (no private key)
+bankr login email you@example.com
 
-# Step 1: Get payment requirement
-res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
-    json={"url": "https://example.com/doc.pdf"})
+# Check wallet & USDC balance on Base
+bankr whoami && bankr balance
 
-if res.status_code == 402:
-    payment_req = res.headers["PAYMENT-REQUIRED"]
+# Use FliX with your agent wallet
+bankr prompt "Convert https://example.com/doc.pdf to markdown \\
+  via api.filx.io/api/v1/pdf/to-markdown and pay with my wallet"
 
-    # Step 2: Sign via Bankr (no private key needed)
-    job = httpx.post(f"{BANKR}/agent/prompt",
-        headers={"X-API-Key": "YOUR_KEY"},
-        json={"prompt": f"sign x402 payment: {payment_req}"}
-    ).json()
+# For scripts: export API key
+export BANKR_API_KEY=$(bankr api-key)`,
 
-    signed_payload = job["result"]["signature"]
-
-    # Step 3: Resend with signed payment
-    result = httpx.post(f"{API}/api/v1/pdf/to-markdown",
-        json={"url": "https://example.com/doc.pdf"},
-        headers={"PAYMENT-SIGNATURE": signed_payload}
-    ).json()
-    print(result)  # {"content": "# Document..."}`,
-
-  curl: `# Step 1: Get payment requirement
+  curl: `# Step 1: Request → get 402 + payment details
 curl -i -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
   -H "Content-Type: application/json" \\
   -d '{"url": "https://example.com/doc.pdf"}'
-# → 402 Payment Required
-# → PAYMENT-REQUIRED: eyJ...base64...
+# → HTTP/2 402
+# → PAYMENT-REQUIRED: eyJzY2hlbWUiOiJleGFjdCIs...
 
-# Step 2: Sign payment and resend with PAYMENT-SIGNATURE header
+# Step 2: Sign with Bankr CLI
+SIGNED=$(bankr sign-x402 "eyJzY2hlbWUiOiJleGFjdCIs...")
+
+# Step 3: Resend with payment proof
 curl -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
   -H "Content-Type: application/json" \\
-  -H "PAYMENT-SIGNATURE: eyJ...signed_base64..." \\
+  -H "PAYMENT-SIGNATURE: $SIGNED" \\
   -d '{"url": "https://example.com/doc.pdf"}'
-# → 200 OK
-# → PAYMENT-RESPONSE: eyJ...settlement...
-# → {"content": "# Document..."}`,
+# → HTTP/2 200 → {"content": "# Document..."}`,
 };
 
 type Lang = keyof typeof SNIPPETS;
 
 const TAB_LABELS: Record<Lang, string> = {
-  python: "Python",
+  bankr:      "Python + Bankr",
   javascript: "JavaScript",
-  bankr: "Bankr",
-  curl: "cURL",
+  cli:        "Bankr CLI",
+  curl:       "cURL",
 };
 
-// Ordered tab list
-const TAB_ORDER: Lang[] = ["python", "javascript", "bankr", "curl"];
+const TAB_ORDER: Lang[] = ["bankr", "javascript", "cli", "curl"];
 
 export function AgentSnippet() {
-  const [lang, setLang] = useState<Lang>("python");
+  const [lang, setLang] = useState<Lang>("bankr");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -112,24 +113,38 @@ export function AgentSnippet() {
     <section className="py-20 px-6 border-t border-white/[0.06]">
       <div className="max-w-4xl mx-auto space-y-8">
         <div className="text-center space-y-3">
+          <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold">
+            // integration
+          </p>
           <h2 className="font-mono font-black text-2xl md:text-3xl uppercase tracking-widest text-slate-200">
             Built for AI Agents
           </h2>
           <p className="font-mono text-slate-500 text-sm">
-            x402 SDKs handle the full payment flow automatically. One call, one result.
+            No private keys in your code. Bankr handles wallet + signing — your agent just calls the API.
           </p>
         </div>
 
-        <div className="rounded-md border border-white/[0.06] overflow-hidden">
+        {/* Security banner */}
+        <div className="border border-green-400/20 bg-green-400/5 px-4 py-3 flex items-center gap-3">
+          <Shield className="w-4 h-4 text-green-400 flex-shrink-0" />
+          <p className="font-mono text-xs text-slate-400 leading-relaxed">
+            <strong className="text-green-400">No private key exposure.</strong>{" "}
+            Bankr uses <strong className="text-slate-300">Privy embedded wallets</strong> — your agent authenticates
+            with <code className="text-[#3b82f6]">BANKR_API_KEY</code>, a rotatable API credential. The underlying
+            private key is never accessible to your code.
+          </p>
+        </div>
+
+        <div className="border border-white/[0.06] overflow-hidden">
           {/* Tab bar */}
           <div className="flex items-center justify-between border-b border-white/[0.06] bg-white/[0.02] px-4">
-            <div className="flex">
+            <div className="flex overflow-x-auto">
               {TAB_ORDER.map((l) => (
                 <button
                   key={l}
                   onClick={() => setLang(l)}
                   className={cn(
-                    "px-4 py-3 font-mono text-xs font-medium border-b-2 transition-colors uppercase tracking-wider",
+                    "px-4 py-3 font-mono text-xs font-medium border-b-2 transition-colors whitespace-nowrap",
                     lang === l
                       ? "border-[#3b82f6] text-slate-200"
                       : "border-transparent text-slate-600 hover:text-slate-400"
@@ -141,7 +156,7 @@ export function AgentSnippet() {
             </div>
             <button
               onClick={handleCopy}
-              className="flex items-center gap-1.5 font-mono text-xs text-slate-600 hover:text-slate-300 transition-colors py-2 px-3 rounded-md hover:bg-white/[0.04]"
+              className="flex items-center gap-1.5 font-mono text-xs text-slate-600 hover:text-slate-300 transition-colors py-2 px-3 hover:bg-white/[0.04] flex-shrink-0"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
               {copied ? "Copied!" : "Copy"}
@@ -154,15 +169,25 @@ export function AgentSnippet() {
               <code>{SNIPPETS[lang]}</code>
             </pre>
           </div>
+
+          <div className="border-t border-white/[0.06] px-4 py-2.5 flex items-center justify-between gap-2 bg-white/[0.01]">
+            <span className="font-mono text-[10px] text-slate-600">
+              {lang === "bankr" && "pip install httpx  ·  export BANKR_API_KEY=$(bankr api-key)"}
+              {lang === "javascript" && "npm install @buildersgarden/siwa @x402/fetch"}
+              {lang === "cli" && "npm install -g @bankr/cli  ·  bankr login email you@example.com"}
+              {lang === "curl" && "requires: Bankr CLI for signing  ·  bankr sign-x402 <header>"}
+            </span>
+            <a href="https://bankr.bot" target="_blank" rel="noopener noreferrer"
+              className="font-mono text-[10px] text-[#3b82f6] hover:text-white transition-colors flex-shrink-0">
+              bankr.bot →
+            </a>
+          </div>
         </div>
 
         {/* Compatible frameworks */}
         <div className="flex flex-wrap justify-center gap-2">
-          {["MCP", "LangGraph", "AutoGPT", "CrewAI", "OpenAI Functions", "Raw HTTP"].map((f) => (
-            <span
-              key={f}
-              className="font-mono text-xs text-slate-500 px-3 py-1 rounded-md border border-white/[0.06]"
-            >
+          {["MCP", "LangGraph", "CrewAI", "AutoGPT", "OpenAI Functions", "Claude Tools", "Raw HTTP"].map((f) => (
+            <span key={f} className="font-mono text-xs text-slate-500 px-3 py-1 border border-white/[0.06]">
               {f}
             </span>
           ))}
