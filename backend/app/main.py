@@ -2,28 +2,146 @@
 FilX.io — x402 File Converter Primitive for AI Agents
 api.filx.io
 """
-from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-import os
+from __future__ import annotations
+
 import base64
 import json
+import os
+from typing import Any, Dict, List, Optional
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.utils import get_openapi
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field, HttpUrl, model_validator
+
+
+# ── OpenAPI metadata ──────────────────────────────────────────────────────────
+
+DESCRIPTION = """
+## File Conversion Infrastructure for AI Agents
+
+FliX is a **pay-per-request file conversion API** built for autonomous AI agents.
+No sign-up. No API keys. No subscriptions.
+
+Every endpoint uses the [x402 protocol](https://x402.org) — Coinbase's open standard
+for machine-to-machine micropayments over HTTP.
+
+---
+
+### How it works
+
+1. **POST** your request → server returns `HTTP 402 Payment Required` with a `PAYMENT-REQUIRED` header
+2. **Sign** a USDC micropayment on Base chain (via [Bankr](https://bankr.bot), your wallet, or any x402 SDK)
+3. **Resend** the request with `PAYMENT-SIGNATURE` header → get your converted file
+
+### Quick Start (Python)
+
+```python
+# pip install x402
+from x402 import Client
+
+client = Client(wallet_private_key="0x...")
+result = client.post(
+    "https://api.filx.io/api/v1/pdf/to-markdown",
+    json={"url": "https://example.com/document.pdf"}
+)
+print(result.json())
+```
+
+### Quick Start (JavaScript)
+
+```javascript
+// npm install @x402/fetch viem
+import { wrapFetch } from "@x402/fetch";
+const fetchWithPayment = wrapFetch(fetch, walletClient);
+const res = await fetchWithPayment("https://api.filx.io/api/v1/pdf/to-markdown", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ url: "https://example.com/doc.pdf" }),
+});
+```
+
+---
+
+### Payment Headers
+
+| Header | Direction | Description |
+|--------|-----------|-------------|
+| `PAYMENT-REQUIRED` | ← Server | Base64-encoded JSON: amount, currency, network, recipient |
+| `PAYMENT-SIGNATURE` | → Client | Base64-encoded signed payment payload |
+| `PAYMENT-RESPONSE` | ← Server | Returned on 200 OK with tx hash and settlement proof |
+
+---
+
+### Pricing
+All prices in **USDC on Base mainnet** (chain ID 8453).
+Minimum charge: **$0.001 USDC**. No charge on errors.
+
+### Links
+- 📖 [Full Docs](https://filx.io/docs)
+- 📊 [API Status](https://status.filx.io)
+- 🐦 [@filx_io](https://x.com/filx_io)
+- 🌐 [x402.org](https://x402.org)
+"""
+
+TAGS_METADATA = [
+    {
+        "name": "System",
+        "description": "Health check and system info endpoints.",
+    },
+    {
+        "name": "Info",
+        "description": "Pricing and operational metadata.",
+    },
+    {
+        "name": "Document",
+        "description": "**PDF and document processing.**\n\nConvert, compress, merge, split, rotate, unlock PDFs. Generate PDFs from HTML and Markdown.",
+    },
+    {
+        "name": "Image",
+        "description": "**Image processing and transformation.**\n\nResize, compress, convert, crop, upscale, watermark, background removal.",
+    },
+    {
+        "name": "Data",
+        "description": "**Data extraction from documents and images.**\n\nOCR text extraction, table detection and export to CSV/JSON.",
+    },
+    {
+        "name": "Jobs",
+        "description": "Job status and result retrieval.",
+    },
+]
+
 
 app = FastAPI(
-    title="FilX.io API",
-    description="The x402 File Converter Primitive for AI Agents. No accounts, no API keys — pay per request with USDC on Base via the x402 protocol.",
+    title="FliX.io API",
+    description=DESCRIPTION,
     version="0.2.0",
+    openapi_tags=TAGS_METADATA,
     docs_url="/docs",
     redoc_url="/redoc",
     openapi_url="/openapi.json",
+    contact={
+        "name": "FliX Support",
+        "url": "https://filx.io",
+        "email": "hello@filx.io",
+    },
+    license_info={
+        "name": "MIT",
+        "url": "https://github.com/filx-io/web/blob/main/LICENSE",
+    },
+    servers=[
+        {"url": "https://api.filx.io", "description": "Production"},
+        {"url": "http://localhost:8000", "description": "Local Development"},
+    ],
 )
 
-# ── CORS ─────────────────────────────────────────────────────────────────────
+# ── CORS ──────────────────────────────────────────────────────────────────────
 app.add_middleware(
     CORSMiddleware,
     allow_origins=os.getenv(
         "ALLOWED_ORIGINS",
-        "https://filx.io,https://app.filx.io,https://status.filx.io,http://localhost:3000"
+        "https://filx.io,https://app.filx.io,https://status.filx.io,http://localhost:3000",
     ).split(","),
     allow_credentials=True,
     allow_methods=["*"],
@@ -31,111 +149,382 @@ app.add_middleware(
     expose_headers=["PAYMENT-REQUIRED", "PAYMENT-RESPONSE"],
 )
 
-# ── Config ───────────────────────────────────────────────────────────────────
+# ── Config ────────────────────────────────────────────────────────────────────
 TREASURY_ADDRESS = os.getenv("TREASURY_ADDRESS", "0x0000000000000000000000000000000000000000")
-BASE_URL = os.getenv("BASE_URL", "https://api.filx.io")
 
-PRICING = {
-    # Document
-    "pdf_to_markdown":      {"amount": "0.002", "unit": "per page"},
-    "pdf_ocr":              {"amount": "0.004", "unit": "per page"},
-    "pdf_compress":         {"amount": "0.002", "unit": "per file"},
-    "pdf_merge":            {"amount": "0.002", "unit": "per job"},
-    "pdf_split":            {"amount": "0.002", "unit": "per job"},
-    "pdf_rotate":           {"amount": "0.001", "unit": "per job"},
-    "pdf_unlock":           {"amount": "0.003", "unit": "per file"},
-    "pdf_to_image":         {"amount": "0.002", "unit": "per page"},
-    "html_to_pdf":          {"amount": "0.002", "unit": "per page"},
-    "markdown_to_pdf":      {"amount": "0.002", "unit": "per page"},
-    # Image
-    "image_resize":         {"amount": "0.001", "unit": "per image"},
-    "image_compress":       {"amount": "0.001", "unit": "per image"},
-    "image_convert":        {"amount": "0.001", "unit": "per image"},
-    "image_crop":           {"amount": "0.001", "unit": "per image"},
-    "image_bg_remove":      {"amount": "0.005", "unit": "per image"},
-    "image_upscale":        {"amount": "0.008", "unit": "per image"},
-    "image_watermark":      {"amount": "0.001", "unit": "per image"},
-    "image_rotate":         {"amount": "0.001", "unit": "per image"},
-    # Data
-    "table_extract":        {"amount": "0.003", "unit": "per page"},
-    "ocr_image":            {"amount": "0.003", "unit": "per image"},
+PRICING: Dict[str, Dict[str, str]] = {
+    "pdf_to_markdown":   {"amount": "0.002", "unit": "per page"},
+    "pdf_ocr":           {"amount": "0.004", "unit": "per page"},
+    "pdf_compress":      {"amount": "0.002", "unit": "per file"},
+    "pdf_merge":         {"amount": "0.002", "unit": "per job"},
+    "pdf_split":         {"amount": "0.002", "unit": "per job"},
+    "pdf_rotate":        {"amount": "0.001", "unit": "per job"},
+    "pdf_unlock":        {"amount": "0.003", "unit": "per file"},
+    "pdf_to_image":      {"amount": "0.002", "unit": "per page"},
+    "html_to_pdf":       {"amount": "0.002", "unit": "per page"},
+    "markdown_to_pdf":   {"amount": "0.002", "unit": "per page"},
+    "image_resize":      {"amount": "0.001", "unit": "per image"},
+    "image_compress":    {"amount": "0.001", "unit": "per image"},
+    "image_convert":     {"amount": "0.001", "unit": "per image"},
+    "image_crop":        {"amount": "0.001", "unit": "per image"},
+    "image_bg_remove":   {"amount": "0.005", "unit": "per image"},
+    "image_upscale":     {"amount": "0.008", "unit": "per image"},
+    "image_watermark":   {"amount": "0.001", "unit": "per image"},
+    "image_rotate":      {"amount": "0.001", "unit": "per image"},
+    "table_extract":     {"amount": "0.003", "unit": "per page"},
+    "ocr_image":         {"amount": "0.003", "unit": "per image"},
 }
 
-DISCOUNTS = {
+DISCOUNTS: Dict[str, str] = {
     "batch_5plus":  "10%",
     "batch_10plus": "20%",
 }
 
 
+# ── Pydantic Schemas ──────────────────────────────────────────────────────────
+
+class PaymentRequiredError(BaseModel):
+    error: str = Field("payment_required", examples=["payment_required"])
+    operation: str = Field(..., examples=["pdf_to_markdown"])
+    amount: str = Field(..., examples=["0.002"])
+    currency: str = Field("USDC", examples=["USDC"])
+    network: str = Field("base", examples=["base"])
+    message: str = Field(..., examples=["Include PAYMENT-SIGNATURE header with a signed USDC payment of 0.002 USDC on Base."])
+    docs: str = Field("https://filx.io/docs#x402", examples=["https://filx.io/docs#x402"])
+
+
+class ErrorResponse(BaseModel):
+    error: str
+    message: str
+
+
+# ── Document Request Schemas ──────────────────────────────────────────────────
+
+class PdfToMarkdownRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible URL of the PDF to convert.", examples=["https://example.com/report.pdf"])
+    pages: Optional[str] = Field(None, description="Page range to process, e.g. `'1-5'` or `'1,3,7'`. Defaults to all pages.", examples=["1-5"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/report.pdf", "pages": "1-10"}}}
+
+
+class PdfOcrRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible PDF URL.", examples=["https://example.com/scanned.pdf"])
+    lang: Optional[str] = Field("eng", description="OCR language. `eng` (English) or `ind` (Indonesian).", examples=["eng"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/scanned.pdf", "lang": "eng"}}}
+
+
+class PdfCompressRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible PDF URL.", examples=["https://example.com/large.pdf"])
+    quality: Optional[str] = Field("medium", description="Compression quality: `low`, `medium`, or `high`.", examples=["medium"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/large.pdf", "quality": "medium"}}}
+
+
+class PdfMergeRequest(BaseModel):
+    urls: List[str] = Field(..., description="Array of publicly accessible PDF URLs to merge, in order. Maximum 10.", min_length=2, max_length=10)
+
+    model_config = {"json_schema_extra": {"example": {"urls": ["https://example.com/part1.pdf", "https://example.com/part2.pdf"]}}}
+
+
+class PdfSplitRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible PDF URL.", examples=["https://example.com/doc.pdf"])
+    ranges: Optional[str] = Field(None, description="Comma-separated page ranges, e.g. `'1-3,4-7,8-'`. Defaults to one page per file.", examples=["1-5,6-10"])
+    every: Optional[int] = Field(None, description="Split every N pages (alternative to ranges).", examples=[5])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/doc.pdf", "ranges": "1-5,6-10,11-"}}}
+
+
+class PdfRotateRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible PDF URL.", examples=["https://example.com/doc.pdf"])
+    angle: int = Field(..., description="Rotation angle in degrees: `90`, `180`, or `270`.", examples=[90])
+    pages: Optional[str] = Field(None, description="Page range to rotate. Defaults to all pages.", examples=["1-3"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/doc.pdf", "angle": 90}}}
+
+
+class PdfUnlockRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible password-protected PDF URL.", examples=["https://example.com/locked.pdf"])
+    password: Optional[str] = Field(None, description="PDF password, if known.", examples=["secret123"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/locked.pdf"}}}
+
+
+class PdfToImageRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible PDF URL.", examples=["https://example.com/doc.pdf"])
+    dpi: Optional[int] = Field(150, description="Output resolution in DPI. Supported: `72`, `96`, `150`, `300`.", examples=[150])
+    format: Optional[str] = Field("png", description="Output image format: `png` or `jpg`.", examples=["png"])
+    pages: Optional[str] = Field(None, description="Page range to render. Defaults to all pages.", examples=["1-3"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/doc.pdf", "dpi": 150, "format": "png"}}}
+
+
+class HtmlToPdfRequest(BaseModel):
+    url: Optional[str] = Field(None, description="Public page URL to convert. Use `url` or `html`, not both.", examples=["https://example.com/page"])
+    html: Optional[str] = Field(None, description="Raw HTML string to convert. Use `url` or `html`, not both.", examples=["<h1>Hello</h1><p>World</p>"])
+    page_size: Optional[str] = Field("A4", description="Page size: `A4`, `letter`, or `A3`.", examples=["A4"])
+    margin: Optional[str] = Field("20px", description="Page margin CSS shorthand, e.g. `'20px 40px'`.", examples=["20px"])
+    header_html: Optional[str] = Field(None, description="HTML string for the page header (repeated on every page).")
+    footer_html: Optional[str] = Field(None, description="HTML string for the page footer (repeated on every page).")
+
+    @model_validator(mode="after")
+    def check_url_or_html(self) -> "HtmlToPdfRequest":
+        if not self.url and not self.html:
+            raise ValueError("Provide either 'url' or 'html'.")
+        return self
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/page", "page_size": "A4"}}}
+
+
+class MarkdownToPdfRequest(BaseModel):
+    markdown: str = Field(..., description="Raw Markdown content to convert.", examples=["# Hello\n\nThis is a **test** document."])
+    theme: Optional[str] = Field("default", description="PDF theme: `default`, `github`, or `minimal`.", examples=["github"])
+
+    model_config = {"json_schema_extra": {"example": {"markdown": "# Report\n\n## Summary\n\nKey findings here.", "theme": "github"}}}
+
+
+# ── Image Request Schemas ─────────────────────────────────────────────────────
+
+class ImageResizeRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible image URL.", examples=["https://example.com/photo.jpg"])
+    width: Optional[int] = Field(None, description="Target width in pixels.", examples=[800])
+    height: Optional[int] = Field(None, description="Target height in pixels.", examples=[600])
+    scale: Optional[float] = Field(None, description="Scale factor, e.g. `0.5` for 50%.", examples=[0.5])
+    fit: Optional[str] = Field("contain", description="Fit mode: `contain`, `cover`, or `fill`.", examples=["contain"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/photo.jpg", "width": 800, "height": 600}}}
+
+
+class ImageCompressRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible image URL.", examples=["https://example.com/photo.jpg"])
+    quality: Optional[int] = Field(80, description="Compression quality 1–100. Lower = smaller file.", ge=1, le=100, examples=[80])
+    lossless: Optional[bool] = Field(False, description="Force lossless compression (PNG/WebP only).", examples=[False])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/photo.jpg", "quality": 80}}}
+
+
+class ImageConvertRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible image URL.", examples=["https://example.com/photo.jpg"])
+    format: str = Field(..., description="Target format: `png`, `jpg`, `webp`, `avif`, `bmp`, `tiff`, `gif`, `ico`.", examples=["webp"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/photo.jpg", "format": "webp"}}}
+
+
+class ImageCropRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible image URL.", examples=["https://example.com/photo.jpg"])
+    x: Optional[int] = Field(None, description="Left offset in pixels.", examples=[100])
+    y: Optional[int] = Field(None, description="Top offset in pixels.", examples=[50])
+    width: int = Field(..., description="Crop width in pixels.", examples=[400])
+    height: int = Field(..., description="Crop height in pixels.", examples=[300])
+    smart: Optional[bool] = Field(False, description="AI subject-centered smart crop (ignores x/y).", examples=[False])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/photo.jpg", "width": 400, "height": 400, "smart": True}}}
+
+
+class ImageRemoveBgRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible image URL (PNG/JPG/WebP). Returns transparent PNG.", examples=["https://example.com/product.jpg"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/product.jpg"}}}
+
+
+class ImageUpscaleRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible image URL.", examples=["https://example.com/photo.jpg"])
+    scale: int = Field(..., description="Upscale factor: `2` (2×) or `4` (4×).", examples=[2])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/photo.jpg", "scale": 2}}}
+
+
+class ImageWatermarkRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible image URL.", examples=["https://example.com/photo.jpg"])
+    text: Optional[str] = Field(None, description="Watermark text. Use `text` or `watermark_url`, not both.", examples=["© FliX 2026"])
+    watermark_url: Optional[str] = Field(None, description="URL of watermark image. Use `text` or `watermark_url`, not both.")
+    position: Optional[str] = Field("bottom-right", description="Position: `center`, `top-left`, `top-right`, `bottom-left`, `bottom-right`.", examples=["bottom-right"])
+    opacity: Optional[float] = Field(0.5, description="Opacity 0.0–1.0.", ge=0.0, le=1.0, examples=[0.5])
+    rotation: Optional[int] = Field(0, description="Rotation in degrees.", examples=[0])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/photo.jpg", "text": "© 2026", "position": "bottom-right", "opacity": 0.4}}}
+
+
+class ImageRotateRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible image URL.", examples=["https://example.com/photo.jpg"])
+    angle: Optional[int] = Field(None, description="Rotation angle: `90`, `180`, or `270`.", examples=[90])
+    flip: Optional[str] = Field(None, description="Flip direction: `horizontal` or `vertical`.", examples=["horizontal"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/photo.jpg", "angle": 90}}}
+
+
+# ── Data Request Schemas ──────────────────────────────────────────────────────
+
+class TableExtractRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible PDF or image URL.", examples=["https://example.com/report.pdf"])
+    format: Optional[str] = Field("json", description="Output format: `json` or `csv`.", examples=["json"])
+    pages: Optional[str] = Field(None, description="Page range for PDFs. Defaults to all.", examples=["1-3"])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/financial-report.pdf", "format": "json"}}}
+
+
+class OcrImageRequest(BaseModel):
+    url: str = Field(..., description="Publicly accessible image URL (PNG/JPG/WebP/BMP/TIFF).", examples=["https://example.com/invoice.jpg"])
+    lang: Optional[str] = Field("eng", description="OCR language: `eng` (English) or `ind` (Indonesian).", examples=["eng"])
+    structured: Optional[bool] = Field(False, description="Return bounding boxes and confidence scores per word.", examples=[False])
+
+    model_config = {"json_schema_extra": {"example": {"url": "https://example.com/invoice.jpg", "lang": "eng"}}}
+
+
+# ── Response Schemas ──────────────────────────────────────────────────────────
+
+class FileOutputResponse(BaseModel):
+    url: str = Field(..., description="Temporary download URL. **Expires in 1 hour** — download immediately.", examples=["https://api.filx.io/files/abc123.pdf"])
+    expires_at: str = Field(..., description="ISO 8601 expiry timestamp.", examples=["2026-03-03T03:00:00Z"])
+
+
+class TextOutputResponse(BaseModel):
+    content: str = Field(..., description="Extracted Markdown or text content.", examples=["# Document Title\n\n## Section\n\nBody text..."])
+    pages_processed: int = Field(..., description="Number of pages processed.", examples=[4])
+    cost_usdc: str = Field(..., description="Actual charge in USDC.", examples=["0.008"])
+
+
+class PdfCompressResponse(FileOutputResponse):
+    original_size: int = Field(..., description="Original file size in bytes.", examples=[2048000])
+    compressed_size: int = Field(..., description="Compressed file size in bytes.", examples=[614400])
+    reduction_pct: int = Field(..., description="Percentage size reduction.", examples=[70])
+
+
+class ImageCompressResponse(FileOutputResponse):
+    original_size: int = Field(..., description="Original file size in bytes.", examples=[512000])
+    compressed_size: int = Field(..., description="Compressed file size in bytes.", examples=[102400])
+    reduction_pct: int = Field(..., description="Percentage size reduction.", examples=[80])
+
+
+class ImageResizeResponse(FileOutputResponse):
+    width: int = Field(..., description="Output width in pixels.", examples=[800])
+    height: int = Field(..., description="Output height in pixels.", examples=[600])
+
+
+class MultiFileResponse(BaseModel):
+    urls: List[str] = Field(..., description="List of temporary file download URLs. Each expires in 1 hour.", examples=[["https://api.filx.io/files/part1.pdf", "https://api.filx.io/files/part2.pdf"]])
+    expires_at: str = Field(..., description="ISO 8601 expiry timestamp.", examples=["2026-03-03T03:00:00Z"])
+
+
+class TableRow(BaseModel):
+    page: int = Field(..., examples=[1])
+    headers: List[str] = Field(..., examples=[["Name", "Q1", "Q2"]])
+    rows: List[List[str]] = Field(..., examples=[[["Alice", "120,000", "145,000"], ["Bob", "98,000", "112,000"]]])
+
+
+class TableExtractResponse(BaseModel):
+    tables: List[TableRow] = Field(..., description="Extracted tables with headers and rows.")
+    tables_found: int = Field(..., description="Total number of tables detected.", examples=[2])
+    cost_usdc: str = Field(..., description="Actual charge in USDC.", examples=["0.009"])
+
+
+class OcrResponse(BaseModel):
+    text: str = Field(..., description="Extracted plain text.", examples=["Invoice #1042\nDate: 2026-01-15\nTotal: $1,200.00"])
+    confidence: float = Field(..., description="OCR confidence score 0.0–1.0.", examples=[0.97])
+    cost_usdc: str = Field(..., description="Actual charge in USDC.", examples=["0.003"])
+
+
+class HealthResponse(BaseModel):
+    status: str = Field("ok", examples=["ok"])
+    service: str = Field("filx.io", examples=["filx.io"])
+    version: str = Field(..., examples=["0.2.0"])
+
+
+class PricingResponse(BaseModel):
+    currency: str = Field("USDC", examples=["USDC"])
+    network: str = Field("base", examples=["base"])
+    chain_id: int = Field(8453, examples=[8453])
+    decimals: int = Field(6, examples=[6])
+    prices: Dict[str, Any]
+    discounts: Dict[str, str]
+    notes: Dict[str, str]
+
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
 def make_payment_required(operation: str) -> dict:
-    """Build a PAYMENT-REQUIRED payload for the given operation."""
     price = PRICING.get(operation, {"amount": "0.001"})
     amount_usdc = price["amount"]
-    # Convert to micro-units (USDC has 6 decimals)
     amount_micro = str(int(float(amount_usdc) * 1_000_000))
     return {
-        "scheme":    "exact",
-        "network":   "base",
-        "currency":  "USDC",
-        "amount":    amount_micro,
+        "scheme":      "exact",
+        "network":     "base",
+        "currency":    "USDC",
+        "amount":      amount_micro,
         "amount_usdc": amount_usdc,
-        "recipient": TREASURY_ADDRESS,
-        "operation": operation,
+        "recipient":   TREASURY_ADDRESS,
+        "operation":   operation,
     }
 
 
-def payment_required_response(operation: str, endpoint: str) -> JSONResponse:
-    """Return a proper HTTP 402 with PAYMENT-REQUIRED header."""
+def x402_response(operation: str) -> JSONResponse:
     payload = make_payment_required(operation)
     encoded = base64.b64encode(json.dumps(payload).encode()).decode()
     return JSONResponse(
         status_code=402,
         content={
-            "error": "payment_required",
+            "error":     "payment_required",
             "operation": operation,
-            "amount": payload["amount_usdc"],
-            "currency": "USDC",
-            "network": "base",
-            "message": f"Include PAYMENT-SIGNATURE header with a signed USDC payment of {payload['amount_usdc']} USDC on Base.",
+            "amount":    payload["amount_usdc"],
+            "currency":  "USDC",
+            "network":   "base",
+            "message":   (
+                f"Include PAYMENT-SIGNATURE header with a signed USDC payment of "
+                f"{payload['amount_usdc']} USDC on Base. "
+                f"See https://filx.io/docs#x402"
+            ),
             "docs": "https://filx.io/docs#x402",
         },
         headers={"PAYMENT-REQUIRED": encoded},
     )
 
 
-# ── System ───────────────────────────────────────────────────────────────────
+# ── System ────────────────────────────────────────────────────────────────────
 
-@app.get("/health", tags=["System"])
+@app.get(
+    "/health",
+    tags=["System"],
+    summary="Health check",
+    response_model=HealthResponse,
+)
 async def health():
-    return {
-        "status": "ok",
-        "service": "filx.io",
-        "version": "0.2.0",
-    }
+    """Returns `{"status": "ok"}` when the API is up. Use this for uptime monitoring."""
+    return {"status": "ok", "service": "filx.io", "version": "0.2.0"}
 
 
-@app.get("/", tags=["System"])
+@app.get(
+    "/",
+    tags=["System"],
+    summary="API root",
+)
 async def root():
+    """Service info, version, and links."""
     return {
         "service":  "FilX.io",
         "tagline":  "The x402 File Converter Primitive for AI Agents",
         "version":  "0.2.0",
         "status":   "beta",
-        "base_url": BASE_URL,
         "docs":     "https://filx.io/docs",
-        "swagger":  f"{BASE_URL}/docs",
+        "swagger":  "https://api.filx.io/docs",
         "twitter":  "@filx_io",
-        "endpoints": {
-            "pricing": "/api/v1/pricing",
-            "docs":    "/docs",
-            "health":  "/health",
-        },
     }
 
 
-@app.get("/api/v1/pricing", tags=["Info"])
+# ── Info ──────────────────────────────────────────────────────────────────────
+
+@app.get(
+    "/api/v1/pricing",
+    tags=["Info"],
+    summary="Get current pricing",
+    response_model=PricingResponse,
+)
 async def pricing():
-    """Return current pricing for all conversion operations."""
+    """
+    Returns the current price in USDC for every operation.
+
+    All amounts are in USDC on Base mainnet (chain ID 8453, 6 decimals).
+    Minimum charge per job: **$0.001 USDC**. No charge on errors.
+    """
     return {
         "currency":  "USDC",
         "network":   "base",
@@ -145,156 +534,468 @@ async def pricing():
         "discounts": DISCOUNTS,
         "notes": {
             "minimum":    "$0.001 USDC per job",
-            "billing":    "Charged per page for multi-page PDFs. No charge on error.",
+            "billing":    "Charged per page for multi-page PDFs. No charge on 4xx/5xx errors.",
             "settlement": "On-chain USDC on Base mainnet. Every payment has an immutable tx receipt.",
         },
     }
 
 
-# ── Document Processing ───────────────────────────────────────────────────────
+# ── Document ──────────────────────────────────────────────────────────────────
 
-@app.post("/api/v1/pdf/to-markdown", tags=["Document"])
-async def pdf_to_markdown(request: Request):
-    """Convert PDF to Markdown. $0.002 USDC per page via x402."""
-    return payment_required_response("pdf_to_markdown", "/api/v1/pdf/to-markdown")
+@app.post(
+    "/api/v1/pdf/to-markdown",
+    tags=["Document"],
+    summary="PDF → Markdown",
+    response_model=TextOutputResponse,
+    responses={
+        200: {"description": "Markdown content returned.", "model": TextOutputResponse},
+        402: {"description": "x402 Payment Required — include `PAYMENT-SIGNATURE` header.", "model": PaymentRequiredError},
+        400: {"description": "Invalid request (bad URL, missing fields).", "model": ErrorResponse},
+    },
+)
+async def pdf_to_markdown(body: PdfToMarkdownRequest):
+    """
+    Convert a PDF to Markdown.
 
+    Preserves headings, tables, lists, code blocks, and inline formatting.
+    Ideal for feeding documents into LLM context windows or RAG pipelines.
 
-@app.post("/api/v1/pdf/ocr", tags=["Document"])
-async def pdf_ocr(request: Request):
-    """Extract text from scanned PDFs via OCR. $0.004 USDC per page."""
-    return payment_required_response("pdf_ocr", "/api/v1/pdf/ocr")
+    **Pricing:** $0.002 USDC per page · paid via x402 on Base
 
-
-@app.post("/api/v1/pdf/compress", tags=["Document"])
-async def pdf_compress(request: Request):
-    """Compress a PDF. $0.002 USDC per file."""
-    return payment_required_response("pdf_compress", "/api/v1/pdf/compress")
-
-
-@app.post("/api/v1/pdf/merge", tags=["Document"])
-async def pdf_merge(request: Request):
-    """Merge multiple PDFs. $0.002 USDC per job."""
-    return payment_required_response("pdf_merge", "/api/v1/pdf/merge")
-
-
-@app.post("/api/v1/pdf/split", tags=["Document"])
-async def pdf_split(request: Request):
-    """Split a PDF by page range. $0.002 USDC per job."""
-    return payment_required_response("pdf_split", "/api/v1/pdf/split")
-
-
-@app.post("/api/v1/pdf/rotate", tags=["Document"])
-async def pdf_rotate(request: Request):
-    """Rotate PDF pages. $0.001 USDC per job."""
-    return payment_required_response("pdf_rotate", "/api/v1/pdf/rotate")
+    **Example response:**
+    ```json
+    {
+      "content": "# Annual Report 2025\\n\\n## Executive Summary\\n\\nRevenue grew 42% YoY...",
+      "pages_processed": 4,
+      "cost_usdc": "0.008"
+    }
+    ```
+    """
+    return x402_response("pdf_to_markdown")
 
 
-@app.post("/api/v1/pdf/unlock", tags=["Document"])
-async def pdf_unlock(request: Request):
-    """Remove password from PDF. $0.003 USDC per file."""
-    return payment_required_response("pdf_unlock", "/api/v1/pdf/unlock")
+@app.post(
+    "/api/v1/pdf/ocr",
+    tags=["Document"],
+    summary="PDF OCR — extract text from scanned PDFs",
+    responses={
+        200: {"description": "Extracted text content.", "model": OcrResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def pdf_ocr(body: PdfOcrRequest):
+    """
+    Extract text from scanned PDFs using OCR.
+
+    Works on image-based PDFs where standard text extraction fails.
+    Multi-language support: **English** (`eng`) and **Indonesian / Bahasa** (`ind`).
+
+    **Pricing:** $0.004 USDC per page · paid via x402 on Base
+    """
+    return x402_response("pdf_ocr")
 
 
-@app.post("/api/v1/pdf/to-image", tags=["Document"])
-async def pdf_to_image(request: Request):
-    """Render PDF pages to PNG/JPG. $0.002 USDC per page."""
-    return payment_required_response("pdf_to_image", "/api/v1/pdf/to-image")
+@app.post(
+    "/api/v1/pdf/compress",
+    tags=["Document"],
+    summary="PDF Compress — reduce file size",
+    responses={
+        200: {"description": "Compressed PDF download URL.", "model": PdfCompressResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def pdf_compress(body: PdfCompressRequest):
+    """
+    Reduce PDF file size by optimizing embedded images, fonts, and metadata.
+
+    Achieves up to **70–80% size reduction** on image-heavy PDFs.
+
+    **Pricing:** $0.002 USDC per file · paid via x402 on Base
+    """
+    return x402_response("pdf_compress")
 
 
-@app.post("/api/v1/html/to-pdf", tags=["Document"])
-async def html_to_pdf(request: Request):
-    """Convert HTML or URL to PDF. $0.002 USDC per page."""
-    return payment_required_response("html_to_pdf", "/api/v1/html/to-pdf")
+@app.post(
+    "/api/v1/pdf/merge",
+    tags=["Document"],
+    summary="PDF Merge — combine multiple PDFs",
+    responses={
+        200: {"description": "Merged PDF download URL.", "model": FileOutputResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def pdf_merge(body: PdfMergeRequest):
+    """
+    Combine up to **10 PDFs** into a single document.
+
+    Files are fetched from the provided public URLs and merged in the given order.
+    Bookmarks and page structure are preserved.
+
+    **Pricing:** $0.002 USDC per job · paid via x402 on Base
+    """
+    return x402_response("pdf_merge")
 
 
-@app.post("/api/v1/markdown/to-pdf", tags=["Document"])
-async def markdown_to_pdf(request: Request):
-    """Convert Markdown to styled PDF. $0.002 USDC per page."""
-    return payment_required_response("markdown_to_pdf", "/api/v1/markdown/to-pdf")
+@app.post(
+    "/api/v1/pdf/split",
+    tags=["Document"],
+    summary="PDF Split — split by page range",
+    responses={
+        200: {"description": "Array of split PDF download URLs.", "model": MultiFileResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def pdf_split(body: PdfSplitRequest):
+    """
+    Split a PDF into multiple files by page range or every N pages.
+
+    Use `ranges` for custom splits (`'1-5,6-10,11-'`) or `every` for uniform splits.
+
+    **Pricing:** $0.002 USDC per job · paid via x402 on Base
+    """
+    return x402_response("pdf_split")
 
 
-# ── Image Processing ──────────────────────────────────────────────────────────
+@app.post(
+    "/api/v1/pdf/rotate",
+    tags=["Document"],
+    summary="PDF Rotate — rotate pages",
+    responses={
+        200: {"description": "Rotated PDF download URL.", "model": FileOutputResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def pdf_rotate(body: PdfRotateRequest):
+    """
+    Rotate individual pages or the entire PDF at 90°, 180°, or 270°.
 
-@app.post("/api/v1/image/resize", tags=["Image"])
-async def image_resize(request: Request):
-    """Resize an image. $0.001 USDC per image."""
-    return payment_required_response("image_resize", "/api/v1/image/resize")
-
-
-@app.post("/api/v1/image/compress", tags=["Image"])
-async def image_compress(request: Request):
-    """Compress an image. $0.001 USDC per image."""
-    return payment_required_response("image_compress", "/api/v1/image/compress")
-
-
-@app.post("/api/v1/image/convert", tags=["Image"])
-async def image_convert(request: Request):
-    """Convert image format. $0.001 USDC per image."""
-    return payment_required_response("image_convert", "/api/v1/image/convert")
+    **Pricing:** $0.001 USDC per job · paid via x402 on Base
+    """
+    return x402_response("pdf_rotate")
 
 
-@app.post("/api/v1/image/crop", tags=["Image"])
-async def image_crop(request: Request):
-    """Crop an image. $0.001 USDC per image."""
-    return payment_required_response("image_crop", "/api/v1/image/crop")
+@app.post(
+    "/api/v1/pdf/unlock",
+    tags=["Document"],
+    summary="PDF Unlock — remove password protection",
+    responses={
+        200: {"description": "Unlocked PDF download URL.", "model": FileOutputResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def pdf_unlock(body: PdfUnlockRequest):
+    """
+    Remove password protection from encrypted PDFs.
+
+    Returns a fully accessible, unlocked document.
+
+    **Pricing:** $0.003 USDC per file · paid via x402 on Base
+    """
+    return x402_response("pdf_unlock")
 
 
-@app.post("/api/v1/image/remove-bg", tags=["Image"])
-async def image_remove_bg(request: Request):
-    """Remove image background (AI). $0.005 USDC per image."""
-    return payment_required_response("image_bg_remove", "/api/v1/image/remove-bg")
+@app.post(
+    "/api/v1/pdf/to-image",
+    tags=["Document"],
+    summary="PDF → Image — render pages to PNG/JPG",
+    responses={
+        200: {"description": "Array of image download URLs.", "model": MultiFileResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def pdf_to_image(body: PdfToImageRequest):
+    """
+    Render PDF pages as high-resolution PNG or JPG images.
+
+    Configurable DPI: 72 / 96 / **150** (default) / 300.
+
+    **Pricing:** $0.002 USDC per page · paid via x402 on Base
+    """
+    return x402_response("pdf_to_image")
 
 
-@app.post("/api/v1/image/upscale", tags=["Image"])
-async def image_upscale(request: Request):
-    """AI super-resolution upscale 2x/4x. $0.008 USDC per image."""
-    return payment_required_response("image_upscale", "/api/v1/image/upscale")
+@app.post(
+    "/api/v1/html/to-pdf",
+    tags=["Document"],
+    summary="HTML → PDF — convert web page or HTML string",
+    responses={
+        200: {"description": "PDF download URL.", "model": FileOutputResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def html_to_pdf(body: HtmlToPdfRequest):
+    """
+    Convert a web page URL or raw HTML string to a styled PDF.
+
+    Supports custom CSS, Google Fonts, page headers/footers, and A4/Letter/A3 sizes.
+
+    **Pricing:** $0.002 USDC per page · paid via x402 on Base
+    """
+    return x402_response("html_to_pdf")
 
 
-@app.post("/api/v1/image/watermark", tags=["Image"])
-async def image_watermark(request: Request):
-    """Add watermark to image. $0.001 USDC per image."""
-    return payment_required_response("image_watermark", "/api/v1/image/watermark")
+@app.post(
+    "/api/v1/markdown/to-pdf",
+    tags=["Document"],
+    summary="Markdown → PDF — convert Markdown to styled PDF",
+    responses={
+        200: {"description": "PDF download URL.", "model": FileOutputResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def markdown_to_pdf(body: MarkdownToPdfRequest):
+    """
+    Convert Markdown to a beautifully styled PDF.
+
+    Supports GFM tables, fenced code blocks with syntax highlighting,
+    embedded images, and three themes: `default`, `github`, `minimal`.
+
+    **Pricing:** $0.002 USDC per page · paid via x402 on Base
+    """
+    return x402_response("markdown_to_pdf")
 
 
-@app.post("/api/v1/image/rotate", tags=["Image"])
-async def image_rotate(request: Request):
-    """Rotate or flip an image. $0.001 USDC per image."""
-    return payment_required_response("image_rotate", "/api/v1/image/rotate")
+# ── Image ─────────────────────────────────────────────────────────────────────
+
+@app.post(
+    "/api/v1/image/resize",
+    tags=["Image"],
+    summary="Image Resize",
+    responses={
+        200: {"description": "Resized image URL.", "model": ImageResizeResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def image_resize(body: ImageResizeRequest):
+    """
+    Resize an image to exact pixel dimensions or by percentage scale.
+
+    Specify `width` and/or `height`, or use `scale` (e.g. `0.5` for 50%).
+    Aspect ratio is preserved by default with `fit: contain`.
+
+    **Pricing:** $0.001 USDC per image · paid via x402 on Base
+    """
+    return x402_response("image_resize")
 
 
-# ── Data Extraction ───────────────────────────────────────────────────────────
+@app.post(
+    "/api/v1/image/compress",
+    tags=["Image"],
+    summary="Image Compress — reduce file size",
+    responses={
+        200: {"description": "Compressed image URL.", "model": ImageCompressResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def image_compress(body: ImageCompressRequest):
+    """
+    Lossy or lossless image compression.
 
-@app.post("/api/v1/table/extract", tags=["Data"])
-async def table_extract(request: Request):
-    """Extract tables from PDF or image. $0.003 USDC per page."""
-    return payment_required_response("table_extract", "/api/v1/table/extract")
+    Achieves up to **80% file size reduction** with minimal perceptual quality loss.
+    Use `lossless: true` for PNG/WebP lossless mode.
 
-
-@app.post("/api/v1/ocr/image", tags=["Data"])
-async def ocr_image(request: Request):
-    """OCR text extraction from images. $0.003 USDC per image."""
-    return payment_required_response("ocr_image", "/api/v1/ocr/image")
-
-
-# ── Legacy / Generic ──────────────────────────────────────────────────────────
-
-@app.post("/api/v1/convert", tags=["Legacy"])
-async def convert_generic(request: Request):
-    """Generic convert endpoint (deprecated — use specific endpoints)."""
-    return JSONResponse(
-        status_code=410,
-        content={
-            "error": "gone",
-            "message": "Use specific endpoints: /api/v1/pdf/to-markdown, /api/v1/image/resize, etc.",
-            "docs": "https://filx.io/docs",
-        },
-    )
+    **Pricing:** $0.001 USDC per image · paid via x402 on Base
+    """
+    return x402_response("image_compress")
 
 
-@app.get("/api/v1/jobs/{job_id}", tags=["Jobs"])
+@app.post(
+    "/api/v1/image/convert",
+    tags=["Image"],
+    summary="Image Convert — change format",
+    responses={
+        200: {"description": "Converted image URL.", "model": FileOutputResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def image_convert(body: ImageConvertRequest):
+    """
+    Convert between image formats: **PNG, JPG, WebP, AVIF, BMP, TIFF, GIF, ICO**.
+
+    WebP and AVIF offer the best compression for web delivery.
+
+    **Pricing:** $0.001 USDC per image · paid via x402 on Base
+    """
+    return x402_response("image_convert")
+
+
+@app.post(
+    "/api/v1/image/crop",
+    tags=["Image"],
+    summary="Image Crop",
+    responses={
+        200: {"description": "Cropped image URL.", "model": FileOutputResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def image_crop(body: ImageCropRequest):
+    """
+    Crop an image to custom dimensions.
+
+    Use `x`, `y`, `width`, `height` for a fixed crop, or set `smart: true`
+    to let AI auto-detect the subject and center the crop.
+
+    **Pricing:** $0.001 USDC per image · paid via x402 on Base
+    """
+    return x402_response("image_crop")
+
+
+@app.post(
+    "/api/v1/image/remove-bg",
+    tags=["Image"],
+    summary="Background Remove — AI background removal",
+    responses={
+        200: {"description": "Transparent PNG URL.", "model": FileOutputResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def image_remove_bg(body: ImageRemoveBgRequest):
+    """
+    AI-powered background removal.
+
+    Works best on product photos, portraits, and objects with clear foreground subjects.
+    Always returns a **transparent PNG**.
+
+    **Pricing:** $0.005 USDC per image · paid via x402 on Base
+    """
+    return x402_response("image_bg_remove")
+
+
+@app.post(
+    "/api/v1/image/upscale",
+    tags=["Image"],
+    summary="Image Upscale — AI super-resolution 2x/4x",
+    responses={
+        200: {"description": "Upscaled image URL.", "model": ImageResizeResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def image_upscale(body: ImageUpscaleRequest):
+    """
+    AI super-resolution upscaling at **2× or 4×**.
+
+    Uses deep learning to reconstruct fine detail — significantly sharper
+    than bicubic or Lanczos interpolation.
+
+    **Pricing:** $0.008 USDC per image · paid via x402 on Base
+    """
+    return x402_response("image_upscale")
+
+
+@app.post(
+    "/api/v1/image/watermark",
+    tags=["Image"],
+    summary="Image Watermark — add text or image overlay",
+    responses={
+        200: {"description": "Watermarked image URL.", "model": FileOutputResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def image_watermark(body: ImageWatermarkRequest):
+    """
+    Add a text or image watermark with configurable position, opacity, and rotation.
+
+    **Pricing:** $0.001 USDC per image · paid via x402 on Base
+    """
+    return x402_response("image_watermark")
+
+
+@app.post(
+    "/api/v1/image/rotate",
+    tags=["Image"],
+    summary="Image Rotate / Flip",
+    responses={
+        200: {"description": "Rotated/flipped image URL.", "model": FileOutputResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def image_rotate(body: ImageRotateRequest):
+    """
+    Rotate (90°/180°/270°) or flip (horizontal/vertical) an image.
+
+    Lossless for PNG, WebP, TIFF.
+
+    **Pricing:** $0.001 USDC per image · paid via x402 on Base
+    """
+    return x402_response("image_rotate")
+
+
+# ── Data ──────────────────────────────────────────────────────────────────────
+
+@app.post(
+    "/api/v1/table/extract",
+    tags=["Data"],
+    summary="Table Extract — PDF/image to CSV or JSON",
+    responses={
+        200: {"description": "Extracted tables in JSON or CSV.", "model": TableExtractResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def table_extract(body: TableExtractRequest):
+    """
+    Detect and extract all tables from a PDF or image.
+
+    Returns structured JSON with headers and rows, or flat CSV.
+    Handles merged cells, multi-line values, and tables spanning multiple pages.
+
+    **Pricing:** $0.003 USDC per page · paid via x402 on Base
+
+    **Example response:**
+    ```json
+    {
+      "tables": [
+        {
+          "page": 1,
+          "headers": ["Name", "Q1", "Q2"],
+          "rows": [["Alice", "120,000", "145,000"], ["Bob", "98,000", "112,000"]]
+        }
+      ],
+      "tables_found": 1,
+      "cost_usdc": "0.003"
+    }
+    ```
+    """
+    return x402_response("table_extract")
+
+
+@app.post(
+    "/api/v1/ocr/image",
+    tags=["Data"],
+    summary="OCR Image — extract text from photos and scans",
+    responses={
+        200: {"description": "Extracted text.", "model": OcrResponse},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+    },
+)
+async def ocr_image(body: OcrImageRequest):
+    """
+    Extract text from photos, screenshots, and scanned images using OCR.
+
+    Set `structured: true` to receive per-word bounding boxes and confidence scores.
+    Multi-language: **English** (`eng`) and **Indonesian / Bahasa** (`ind`).
+
+    **Pricing:** $0.003 USDC per image · paid via x402 on Base
+    """
+    return x402_response("ocr_image")
+
+
+# ── Jobs ──────────────────────────────────────────────────────────────────────
+
+@app.get(
+    "/api/v1/jobs/{job_id}",
+    tags=["Jobs"],
+    summary="Get job status and result",
+    responses={
+        404: {"description": "Job not found or expired.", "model": ErrorResponse},
+    },
+)
 async def get_job(job_id: str):
-    """Get the status/result of a conversion job."""
+    """
+    Retrieve the status and result of an asynchronous conversion job.
+
+    **Note:** Output files are automatically deleted **1 hour** after creation.
+    If this endpoint returns 404, the file has expired — resubmit the conversion.
+    """
     return JSONResponse(
         status_code=404,
         content={
