@@ -168,15 +168,6 @@ All payments in USDC on Base chain via x402 protocol.
 
 ---
 
-## 🏷️ $FILX Token (Coming Soon)
-
-- 50% discount on all conversions
-- Priority queue (skip ahead of free tier)
-- Staking for passive yield from protocol fees
-- Governance for new format support
-
----
-
 ## 📜 License
 
 MIT © 2025 FilX.io
