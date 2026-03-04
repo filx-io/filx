@@ -23,7 +23,7 @@ export function Footer() {
               Powered by Base. Settled in USDC.
             </p>
             <p className="font-mono text-[10px] text-slate-700 uppercase tracking-widest">
-              x402 Protocol · Base Chain · USDC
+              x402 Protocol · Built for agents, by agents.
             </p>
           </div>
 
