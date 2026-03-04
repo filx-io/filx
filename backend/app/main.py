@@ -15,8 +15,23 @@ import httpx
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 from pydantic import BaseModel, Field, model_validator
+
+# ── Processors (real file processing) ────────────────────────────────────────
+try:
+    from app.processors import (
+        proc_pdf_to_markdown, proc_pdf_ocr, proc_pdf_compress, proc_pdf_merge,
+        proc_pdf_split, proc_pdf_rotate, proc_pdf_unlock, proc_pdf_to_image,
+        proc_html_to_pdf, proc_markdown_to_pdf,
+        proc_image_resize, proc_image_compress, proc_image_convert, proc_image_crop,
+        proc_image_bg_remove, proc_image_upscale, proc_image_watermark, proc_image_rotate,
+        proc_table_extract, proc_ocr_image,
+        OUTPUTS_DIR,
+    )
+    PROCESSORS_AVAILABLE = True
+except ImportError:
+    PROCESSORS_AVAILABLE = False
 
 # ── x402 Official SDK ─────────────────────────────────────────────────────────
 try:
@@ -865,6 +880,15 @@ _STUB_RESPONSES: Dict[str, Any] = {
 }
 
 
+def _track_metrics(operation: str, payer_wallet: Optional[str] = None) -> None:
+    """Track job metrics — call this from real processors instead of stub_response."""
+    _METRICS["jobs_total"] += 1
+    _METRICS["revenue_usdc"] += float(PRICING.get(operation, {"amount": "0.001"})["amount"])
+    _METRICS["jobs_by_op"][operation] += 1
+    if payer_wallet:
+        _METRICS["unique_wallets_live"].add(payer_wallet.lower())
+
+
 def stub_response(operation: str, payer_wallet: Optional[str] = None) -> JSONResponse:
     """Return stub result — payment verified by x402 middleware. Tracks metrics."""
     # ── track job metrics ──
@@ -988,6 +1012,33 @@ async def root():
 # ── Info ──────────────────────────────────────────────────────────────────────
 
 @app.get(
+    "/files/{filename}",
+    tags=["Files"],
+    summary="Download a processed file",
+)
+async def download_file(filename: str):
+    """
+    Download a processed output file. Files are temporary and expire after 1 hour.
+    URLs are returned in all processing endpoint responses as `download_url`.
+    """
+    if PROCESSORS_AVAILABLE:
+        from app.processors import OUTPUTS_DIR as _OUTPUTS_DIR
+        path = _OUTPUTS_DIR / filename
+    else:
+        import pathlib
+        path = pathlib.Path(f"/tmp/outputs/{filename}")
+
+    if not path.exists() or not path.is_file():
+        return JSONResponse(status_code=404, content={"error": "file_not_found", "detail": "File not found or expired."})
+
+    # Basic path traversal guard
+    if ".." in filename or "/" in filename:
+        return JSONResponse(status_code=400, content={"error": "invalid_filename"})
+
+    return FileResponse(str(path), filename=filename)
+
+
+@app.get(
     "/api/v1/pricing",
     tags=["Info"],
     summary="Get current pricing",
@@ -1089,6 +1140,13 @@ async def pdf_to_markdown(body: PdfToMarkdownRequest):
     }
     ```
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_pdf_to_markdown(body.url, body.pages)
+            _track_metrics("pdf_to_markdown")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("pdf_to_markdown")
 
 
@@ -1110,6 +1168,13 @@ async def pdf_ocr(body: PdfOcrRequest):
 
     **Pricing:** $0.004 USDC per page · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_pdf_ocr(body.url, body.lang or "eng")
+            _track_metrics("pdf_ocr")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("pdf_ocr")
 
 
@@ -1130,6 +1195,13 @@ async def pdf_compress(body: PdfCompressRequest):
 
     **Pricing:** $0.002 USDC per file · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_pdf_compress(body.url, body.quality or "medium")
+            _track_metrics("pdf_compress")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("pdf_compress")
 
 
@@ -1151,6 +1223,13 @@ async def pdf_merge(body: PdfMergeRequest):
 
     **Pricing:** $0.002 USDC per job · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_pdf_merge(body.urls)
+            _track_metrics("pdf_merge")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("pdf_merge")
 
 
@@ -1171,6 +1250,13 @@ async def pdf_split(body: PdfSplitRequest):
 
     **Pricing:** $0.002 USDC per job · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_pdf_split(body.url, body.ranges, body.every)
+            _track_metrics("pdf_split")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("pdf_split")
 
 
@@ -1189,6 +1275,13 @@ async def pdf_rotate(body: PdfRotateRequest):
 
     **Pricing:** $0.001 USDC per job · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_pdf_rotate(body.url, body.angle, body.pages)
+            _track_metrics("pdf_rotate")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("pdf_rotate")
 
 
@@ -1209,6 +1302,13 @@ async def pdf_unlock(body: PdfUnlockRequest):
 
     **Pricing:** $0.003 USDC per file · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_pdf_unlock(body.url, body.password)
+            _track_metrics("pdf_unlock")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("pdf_unlock")
 
 
@@ -1229,6 +1329,13 @@ async def pdf_to_image(body: PdfToImageRequest):
 
     **Pricing:** $0.002 USDC per page · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_pdf_to_image(body.url, body.dpi or 150, body.format or "png", body.pages)
+            _track_metrics("pdf_to_image")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("pdf_to_image")
 
 
@@ -1249,6 +1356,13 @@ async def html_to_pdf(body: HtmlToPdfRequest):
 
     **Pricing:** $0.002 USDC per page · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_html_to_pdf(body.url, body.html, body.page_size or "A4", body.margin or "20px")
+            _track_metrics("html_to_pdf")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("html_to_pdf")
 
 
@@ -1270,6 +1384,13 @@ async def markdown_to_pdf(body: MarkdownToPdfRequest):
 
     **Pricing:** $0.002 USDC per page · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_markdown_to_pdf(body.markdown, body.theme or "default")
+            _track_metrics("markdown_to_pdf")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("markdown_to_pdf")
 
 
@@ -1293,6 +1414,13 @@ async def image_resize(body: ImageResizeRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_image_resize(body.url, body.width, body.height, body.scale, body.fit or "contain")
+            _track_metrics("image_resize")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("image_resize")
 
 
@@ -1314,6 +1442,13 @@ async def image_compress(body: ImageCompressRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_image_compress(body.url, body.quality or 80, body.lossless or False)
+            _track_metrics("image_compress")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("image_compress")
 
 
@@ -1334,6 +1469,13 @@ async def image_convert(body: ImageConvertRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_image_convert(body.url, body.format)
+            _track_metrics("image_convert")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("image_convert")
 
 
@@ -1355,6 +1497,13 @@ async def image_crop(body: ImageCropRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_image_crop(body.url, body.x, body.y, body.width, body.height, body.smart or False)
+            _track_metrics("image_crop")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("image_crop")
 
 
@@ -1376,6 +1525,13 @@ async def image_remove_bg(body: ImageRemoveBgRequest):
 
     **Pricing:** $0.005 USDC per image · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_image_bg_remove(body.url)
+            _track_metrics("image_bg_remove")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("image_bg_remove")
 
 
@@ -1397,6 +1553,13 @@ async def image_upscale(body: ImageUpscaleRequest):
 
     **Pricing:** $0.008 USDC per image · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_image_upscale(body.url, body.scale)
+            _track_metrics("image_upscale")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("image_upscale")
 
 
@@ -1415,6 +1578,13 @@ async def image_watermark(body: ImageWatermarkRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_image_watermark(body.url, body.text, body.watermark_url, body.position or "bottom-right", body.opacity if body.opacity is not None else 0.5, body.rotation or 0)
+            _track_metrics("image_watermark")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("image_watermark")
 
 
@@ -1435,6 +1605,13 @@ async def image_rotate(body: ImageRotateRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_image_rotate(body.url, body.angle, body.flip)
+            _track_metrics("image_rotate")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("image_rotate")
 
 
@@ -1473,6 +1650,13 @@ async def table_extract(body: TableExtractRequest):
     }
     ```
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_table_extract(body.url, body.format or "json", body.pages)
+            _track_metrics("table_extract")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("table_extract")
 
 
@@ -1494,6 +1678,13 @@ async def ocr_image(body: OcrImageRequest):
 
     **Pricing:** $0.003 USDC per image · paid via x402 on Base
     """
+    if PROCESSORS_AVAILABLE:
+        try:
+            result = await proc_ocr_image(body.url, body.lang or "eng", body.structured or False)
+            _track_metrics("ocr_image")
+            return JSONResponse(content=result)
+        except Exception as exc:
+            return JSONResponse(status_code=500, content={"error": "processing_failed", "detail": str(exc)})
     return stub_response("ocr_image")
 
 

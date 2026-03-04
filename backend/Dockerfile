@@ -17,6 +17,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     # Image processing
     libvips \
     libmagic1 \
+    # HTML/CSS → PDF (weasyprint)
+    libcairo2 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libgdk-pixbuf-2.0-0 \
+    libffi-dev \
+    shared-mime-info \
     # Build tools
     gcc \
     g++ \

@@ -34,15 +34,20 @@ eth-account==0.13.4
 # ── PDF Processing ───────────────────────────────────────────
 pypdf==5.1.0
 pikepdf==9.5.0
-# docling==2.x  # heavy — install separately in worker image
+pymupdf==1.24.14
+pdf2image==1.17.0
+pdfplumber==0.11.4
 
 # ── Image Processing ─────────────────────────────────────────
 Pillow==11.1.0
-# rembg==2.x    # heavy — install separately in worker image
+rembg==2.0.59
 
 # ── OCR ──────────────────────────────────────────────────────
-# pytesseract   # requires tesseract binary
-# easyocr       # heavy — install separately in worker image
+pytesseract==0.3.13
+
+# ── Markdown / HTML → PDF (phase 2) ──────────────────────────
+markdown==3.7
+weasyprint==63.1
 
 # ── Monitoring ───────────────────────────────────────────────
 sentry-sdk[fastapi]==2.19.2
