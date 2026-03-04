@@ -459,6 +459,14 @@ BASE_NETWORK = "eip155:8453"
 X402_VERSION = 2
 MAX_TIMEOUT_SECONDS = 300
 
+# ── Base Builder Code (ERC-8021) ──────────────────────────────────────────────
+# Append to calldata of every settlement transaction so Base can attribute
+# onchain activity back to FilX.io.
+#
+# Encoding: [0x0b][bc_0qf26yvh ASCII][0x00][0x8021 × 8]
+BUILDER_CODE          = "bc_0qf26yvh"
+BUILDER_DATA_SUFFIX   = "0x0b62635f30716632367976680080218021802180218021802180218021"
+
 
 # ── Bazaar Route Catalogue ────────────────────────────────────────────────────
 # Each entry describes one payable endpoint for the x402 Bazaar discovery layer.
@@ -738,13 +746,15 @@ async def health():
 async def root():
     """Service info, version, and links."""
     return {
-        "service":  "FilX.io",
-        "tagline":  "The x402 File Converter Primitive for AI Agents",
-        "version":  "0.2.0",
-        "status":   "beta",
-        "docs":     "https://filx.io/docs",
-        "swagger":  "https://api.filx.io/docs",
-        "twitter":  "@filx_io",
+        "service":       "FilX.io",
+        "tagline":       "The x402 File Primitive for AI Agents",
+        "version":       "0.2.0",
+        "status":        "beta",
+        "docs":          "https://filx.io/docs",
+        "swagger":       "https://api.filx.io/docs",
+        "twitter":       "@filx_io",
+        "builder_code":  BUILDER_CODE,
+        "discovery":     "https://api.filx.io/discovery/resources",
     }
 
 

@@ -50,7 +50,8 @@ export const metadata: Metadata = {
   robots: { index: true, follow: true },
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://filx.io"),
   other: {
-    "base:app_id": "69a7cb166b656f2fbac52a66",
+    "base:app_id":       "69a7cb166b656f2fbac52a66",
+    "base:builder_code": "bc_0qf26yvh",
   },
 };
 
