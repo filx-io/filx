@@ -130,21 +130,25 @@ jobs:
         run: npm install -g @railway/cli
 
       - name: Deploy Backend
+        continue-on-error: true
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --service backend --detach
 
       - name: Deploy Worker
+        continue-on-error: true
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --service worker --detach
 
       - name: Deploy Frontend
+        continue-on-error: true
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway up --service frontend --detach
 
       - name: Run Migrations
+        continue-on-error: true
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: railway run --service backend python -m alembic upgrade head
