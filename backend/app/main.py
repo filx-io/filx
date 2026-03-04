@@ -552,7 +552,7 @@ BUILDER_DATA_SUFFIX   = "0x0b62635f307166323679766800802180218021802180218021802
 # ── Bazaar Route Catalogue ────────────────────────────────────────────────────
 # Each entry describes one payable endpoint for the x402 Bazaar discovery layer.
 
-_URL_INPUT = {
+_URL_INPUT: Dict[str, Any] = {
     "type": "object",
     "required": ["url"],
     "properties": {
