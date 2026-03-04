@@ -116,6 +116,10 @@ TAGS_METADATA = [
         "name": "Wallet",
         "description": "**Agent wallet — auth, balance, and x402 signing.**\n\nCreate an embedded wallet via email. Sign x402 payments without private keys in your code.",
     },
+    {
+        "name": "Discovery",
+        "description": "**x402 Bazaar discovery layer.**\n\nMachine-readable catalogue of all payable endpoints. Used by the [x402 Bazaar](https://docs.cdp.coinbase.com/x402/bazaar) and AI agents for autonomous service discovery.",
+    },
 ]
 
 
@@ -447,38 +451,265 @@ class PricingResponse(BaseModel):
     notes: Dict[str, str]
 
 
+# ── x402 Constants ────────────────────────────────────────────────────────────
+
+# USDC contract on Base mainnet (EIP-3009 / ERC-20)
+USDC_BASE = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
+BASE_NETWORK = "eip155:8453"
+X402_VERSION = 2
+MAX_TIMEOUT_SECONDS = 300
+
+
+# ── Bazaar Route Catalogue ────────────────────────────────────────────────────
+# Each entry describes one payable endpoint for the x402 Bazaar discovery layer.
+
+_URL_INPUT = {
+    "type": "object",
+    "required": ["url"],
+    "properties": {
+        "url": {"type": "string", "description": "Publicly accessible HTTPS URL of the source file."},
+    },
+}
+
+BAZAAR_ROUTES: List[Dict[str, Any]] = [
+    # ── Document ──────────────────────────────────────────────────────────────
+    {
+        "path": "/api/v1/pdf/to-markdown", "method": "POST",
+        "operation": "pdf_to_markdown",
+        "description": "Convert a PDF to Markdown. Preserves headings, tables, lists, and code blocks. Ideal for LLM ingestion and RAG pipelines.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "pages": {"type": "string", "description": "Page range, e.g. '1-5'. Defaults to all pages."}}},
+        "outputSchema": {"type": "object", "properties": {
+            "content": {"type": "string"}, "pages_processed": {"type": "integer"}, "cost_usdc": {"type": "string"}}},
+    },
+    {
+        "path": "/api/v1/pdf/ocr", "method": "POST",
+        "operation": "pdf_ocr",
+        "description": "OCR text extraction from scanned/image-based PDFs. Supports English and Indonesian.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "lang": {"type": "string", "description": "'eng' (default) or 'ind'."}}},
+        "outputSchema": {"type": "object", "properties": {
+            "content": {"type": "string"}, "pages_processed": {"type": "integer"}, "cost_usdc": {"type": "string"}}},
+    },
+    {
+        "path": "/api/v1/pdf/compress", "method": "POST",
+        "operation": "pdf_compress",
+        "description": "Compress a PDF to reduce file size. Up to 80% reduction on image-heavy PDFs.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "quality": {"type": "string", "description": "'low', 'medium' (default), or 'high'."}}},
+        "outputSchema": {"type": "object", "properties": {
+            "download_url": {"type": "string"}, "original_size_bytes": {"type": "integer"},
+            "compressed_size_bytes": {"type": "integer"}, "reduction_percent": {"type": "number"}}},
+    },
+    {
+        "path": "/api/v1/pdf/merge", "method": "POST",
+        "operation": "pdf_merge",
+        "description": "Merge multiple PDFs into a single file. Up to 10 PDFs per job.",
+        "inputSchema": {"type": "object", "required": ["urls"], "properties": {
+            "urls": {"type": "array", "items": {"type": "string"}, "description": "Array of PDF URLs to merge, in order. Max 10."}}},
+        "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}, "page_count": {"type": "integer"}}},
+    },
+    {
+        "path": "/api/v1/pdf/split", "method": "POST",
+        "operation": "pdf_split",
+        "description": "Split a PDF into multiple files by page ranges or every N pages.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "ranges": {"type": "string", "description": "Comma-separated page ranges, e.g. '1-3,4-7,8-'."},
+            "every": {"type": "integer", "description": "Split every N pages."}}},
+        "outputSchema": {"type": "object", "properties": {
+            "files": {"type": "array", "items": {"type": "object", "properties": {
+                "download_url": {"type": "string"}, "pages": {"type": "string"}}}}}},
+    },
+    {
+        "path": "/api/v1/pdf/to-image", "method": "POST",
+        "operation": "pdf_to_image",
+        "description": "Render PDF pages to PNG or JPG images at configurable DPI.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "dpi": {"type": "integer", "description": "Output DPI: 72, 96, 150 (default), 300."},
+            "format": {"type": "string", "description": "'png' (default) or 'jpg'."},
+            "pages": {"type": "string", "description": "Page range to render."}}},
+        "outputSchema": {"type": "object", "properties": {
+            "images": {"type": "array", "items": {"type": "object", "properties": {
+                "page": {"type": "integer"}, "download_url": {"type": "string"}}}}}},
+    },
+    {
+        "path": "/api/v1/html/to-pdf", "method": "POST",
+        "operation": "html_to_pdf",
+        "description": "Convert a web page URL or raw HTML string to a PDF document.",
+        "inputSchema": {"type": "object", "properties": {
+            "url": {"type": "string", "description": "Public page URL to convert."},
+            "html": {"type": "string", "description": "Raw HTML string to convert."},
+            "page_size": {"type": "string", "description": "'A4' (default), 'letter', or 'A3'."}}},
+        "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}, "page_count": {"type": "integer"}}},
+    },
+    {
+        "path": "/api/v1/markdown/to-pdf", "method": "POST",
+        "operation": "markdown_to_pdf",
+        "description": "Convert Markdown text to a styled PDF. Supports GitHub-flavored Markdown.",
+        "inputSchema": {"type": "object", "required": ["markdown"], "properties": {
+            "markdown": {"type": "string", "description": "Raw Markdown content to convert."},
+            "theme": {"type": "string", "description": "'default', 'github', or 'minimal'."}}},
+        "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}, "page_count": {"type": "integer"}}},
+    },
+    # ── Image ─────────────────────────────────────────────────────────────────
+    {
+        "path": "/api/v1/image/resize", "method": "POST",
+        "operation": "image_resize",
+        "description": "Resize an image by pixel dimensions or scale factor.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "width": {"type": "integer"}, "height": {"type": "integer"},
+            "scale": {"type": "number", "description": "Scale factor, e.g. 0.5 for 50%."},
+            "fit": {"type": "string", "description": "'contain' (default), 'cover', or 'fill'."}}},
+        "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}, "width": {"type": "integer"}, "height": {"type": "integer"}}},
+    },
+    {
+        "path": "/api/v1/image/convert", "method": "POST",
+        "operation": "image_convert",
+        "description": "Convert an image between formats: jpg, png, webp, avif, gif, bmp, tiff.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "format": {"type": "string", "description": "Target format: 'jpg', 'png', 'webp', 'avif', 'gif', 'bmp', 'tiff'."},
+            "quality": {"type": "integer", "description": "Output quality 1–100 (for lossy formats)."}}},
+        "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}, "format": {"type": "string"}}},
+    },
+    {
+        "path": "/api/v1/image/bg-remove", "method": "POST",
+        "operation": "image_bg_remove",
+        "description": "Remove background from an image using AI segmentation. Returns PNG with transparency.",
+        "inputSchema": _URL_INPUT,
+        "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}}},
+    },
+    {
+        "path": "/api/v1/image/upscale", "method": "POST",
+        "operation": "image_upscale",
+        "description": "AI-powered image upscaling. Increase resolution 2x or 4x with detail enhancement.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "scale": {"type": "integer", "description": "Upscale factor: 2 (default) or 4."}}},
+        "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}, "width": {"type": "integer"}, "height": {"type": "integer"}}},
+    },
+    {
+        "path": "/api/v1/image/compress", "method": "POST",
+        "operation": "image_compress",
+        "description": "Compress an image to reduce file size while preserving visual quality.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "quality": {"type": "integer", "description": "Target quality 1–100."}}},
+        "outputSchema": {"type": "object", "properties": {
+            "download_url": {"type": "string"}, "original_size_bytes": {"type": "integer"}, "compressed_size_bytes": {"type": "integer"}}},
+    },
+    {
+        "path": "/api/v1/image/crop", "method": "POST",
+        "operation": "image_crop",
+        "description": "Crop an image to specified coordinates or aspect ratio.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "x": {"type": "integer"}, "y": {"type": "integer"},
+            "width": {"type": "integer"}, "height": {"type": "integer"},
+            "aspect_ratio": {"type": "string", "description": "e.g. '16:9', '1:1'."}}},
+        "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}}},
+    },
+    {
+        "path": "/api/v1/image/watermark", "method": "POST",
+        "operation": "image_watermark",
+        "description": "Add a text or image watermark to a photo.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "text": {"type": "string"}, "opacity": {"type": "number"}, "position": {"type": "string"}}},
+        "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}}},
+    },
+    {
+        "path": "/api/v1/image/rotate", "method": "POST",
+        "operation": "image_rotate",
+        "description": "Rotate an image by 90, 180, or 270 degrees.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "angle": {"type": "integer", "description": "Rotation angle: 90, 180, or 270."}}},
+        "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}}},
+    },
+    # ── Data ──────────────────────────────────────────────────────────────────
+    {
+        "path": "/api/v1/table/extract", "method": "POST",
+        "operation": "table_extract",
+        "description": "Detect and extract tables from PDFs. Export to JSON or CSV.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "format": {"type": "string", "description": "'json' (default) or 'csv'."},
+            "pages": {"type": "string"}}},
+        "outputSchema": {"type": "object", "properties": {
+            "tables": {"type": "array"}, "pages_processed": {"type": "integer"}}},
+    },
+    {
+        "path": "/api/v1/ocr/image", "method": "POST",
+        "operation": "ocr_image",
+        "description": "Extract text from an image using OCR. Supports printed and handwritten text.",
+        "inputSchema": {**_URL_INPUT, "properties": {**_URL_INPUT["properties"],
+            "lang": {"type": "string", "description": "'eng' (default) or 'ind'."}}},
+        "outputSchema": {"type": "object", "properties": {"content": {"type": "string"}, "confidence": {"type": "number"}}},
+    },
+]
+
+
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def make_payment_required(operation: str) -> dict:
+def _payment_requirement(operation: str, resource_url: str) -> Dict[str, Any]:
+    """Build one x402 v2 PaymentRequirement object (official spec format)."""
     price = PRICING.get(operation, {"amount": "0.001"})
     amount_usdc = price["amount"]
     amount_micro = str(int(float(amount_usdc) * 1_000_000))
+    route = next((r for r in BAZAAR_ROUTES if r["operation"] == operation), {})
     return {
-        "scheme":      "exact",
-        "network":     "base",
-        "currency":    "USDC",
-        "amount":      amount_micro,
-        "amount_usdc": amount_usdc,
-        "recipient":   TREASURY_ADDRESS,
-        "operation":   operation,
+        "x402Version":        X402_VERSION,
+        "scheme":             "exact",
+        "network":            BASE_NETWORK,
+        "maxAmountRequired":  amount_micro,
+        "resource":           resource_url,
+        "description":        route.get("description", f"FilX {operation}"),
+        "mimeType":           "application/json",
+        "payTo":              TREASURY_ADDRESS,
+        "maxTimeoutSeconds":  MAX_TIMEOUT_SECONDS,
+        "asset":              USDC_BASE,
+        "extra": {
+            "name":    "USD Coin",
+            "version": "2",
+        },
     }
 
 
-def x402_response(operation: str) -> JSONResponse:
-    payload = make_payment_required(operation)
-    encoded = base64.b64encode(json.dumps(payload, separators=(",", ":")).encode()).decode()
+def make_payment_required(operation: str, request: Optional[Request] = None) -> dict:
+    """Legacy helper — returns internal payment data."""
+    price = PRICING.get(operation, {"amount": "0.001"})
+    return {
+        "operation":   operation,
+        "amount_usdc": price["amount"],
+        "amount_micro": str(int(float(price["amount"]) * 1_000_000)),
+    }
+
+
+def x402_response(operation: str, request: Optional[Request] = None) -> JSONResponse:
+    """Return HTTP 402 with official x402 v2 PAYMENT-REQUIRED header."""
+    price = PRICING.get(operation, {"amount": "0.001"})
+    amount_usdc = price["amount"]
+
+    # Build resource URL from request or default to production
+    if request:
+        resource_url = str(request.url)
+    else:
+        route = next((r for r in BAZAAR_ROUTES if r["operation"] == operation), None)
+        path = route["path"] if route else f"/api/v1/{operation.replace('_', '/')}"
+        resource_url = f"https://api.filx.io{path}"
+
+    # Official x402 v2 format — array of PaymentRequirement objects
+    requirements = [_payment_requirement(operation, resource_url)]
+    encoded = base64.b64encode(
+        json.dumps(requirements, separators=(",", ":")).encode()
+    ).decode()
+
     return JSONResponse(
         status_code=402,
         content={
             "error":     "payment_required",
             "operation": operation,
-            "amount":    payload["amount_usdc"],
+            "amount":    amount_usdc,
             "currency":  "USDC",
-            "network":   "base",
-            "message":   (
-                f"Include PAYMENT-SIGNATURE header with a signed USDC payment of "
-                f"{payload['amount_usdc']} USDC on Base. "
-                f"See https://filx.io/docs#x402"
+            "network":   BASE_NETWORK,
+            "x402Version": X402_VERSION,
+            "message": (
+                f"Include PAYMENT-SIGNATURE header with a signed x402 payment of "
+                f"{amount_usdc} USDC on Base. See https://filx.io/docs#x402"
             ),
             "docs": "https://filx.io/docs#x402",
         },
@@ -984,6 +1215,120 @@ async def ocr_image(body: OcrImageRequest):
     **Pricing:** $0.003 USDC per image · paid via x402 on Base
     """
     return x402_response("ocr_image")
+
+
+# ── Discovery / Bazaar ────────────────────────────────────────────────────────
+
+@app.get(
+    "/discovery/resources",
+    tags=["Discovery"],
+    summary="x402 Bazaar — list all payable endpoints",
+)
+async def discovery_resources(type: Optional[str] = None):
+    """
+    Returns all x402-compatible endpoints in the
+    [Bazaar discovery format](https://docs.cdp.coinbase.com/x402/bazaar).
+
+    Consumed by the Coinbase x402 Bazaar and AI agents for autonomous service discovery.
+
+    ### Query Parameters
+    - `type` — filter by resource type: `http` (default) or `mcp`
+
+    ### Response format follows the x402 Bazaar spec:
+    ```json
+    {
+      "items": [ { "resource": "...", "accepts": [...], "type": "http", ... } ],
+      "total": 18
+    }
+    ```
+    """
+    import datetime
+
+    items = []
+    for route in BAZAAR_ROUTES:
+        resource_url = f"https://api.filx.io{route['path']}"
+        price = PRICING.get(route["operation"], {"amount": "0.001"})
+        amount_micro = str(int(float(price["amount"]) * 1_000_000))
+
+        item = {
+            "resource":    resource_url,
+            "type":        "http",
+            "x402Version": X402_VERSION,
+            "lastUpdated": datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%S.000Z"),
+            "metadata": {
+                "name":        f"FilX — {route['description'].split('.')[0]}",
+                "provider":    "FilX.io",
+                "category":    "Services/Endpoints",
+                "tags":        ["file-conversion", "ai-agents", "x402", "usdc", "base"],
+                "docsUrl":     "https://filx.io/docs",
+                "websiteUrl":  "https://filx.io",
+            },
+            "accepts": [
+                {
+                    "scheme":             "exact",
+                    "network":            BASE_NETWORK,
+                    "asset":              USDC_BASE,
+                    "maxAmountRequired":  amount_micro,
+                    "maxTimeoutSeconds":  MAX_TIMEOUT_SECONDS,
+                    "payTo":              TREASURY_ADDRESS,
+                    "resource":           resource_url,
+                    "description":        route["description"],
+                    "mimeType":           "application/json",
+                    "extra": {"name": "USD Coin", "version": "2"},
+                    "outputSchema": {
+                        "input": {
+                            "type":        "http",
+                            "method":      route["method"],
+                            "inputSchema": route.get("inputSchema", {}),
+                        },
+                        "output": route.get("outputSchema"),
+                    },
+                }
+            ],
+        }
+        if type is None or type == "http":
+            items.append(item)
+
+    return JSONResponse(content={"items": items, "total": len(items)})
+
+
+@app.get(
+    "/.well-known/x402.json",
+    tags=["Discovery"],
+    summary="Well-known x402 service manifest",
+)
+async def well_known_x402():
+    """
+    Machine-readable x402 service manifest.
+
+    Follows the [x402 well-known URI](https://x402.org) convention.
+    Used by crawlers, wallets, and AI agents to auto-discover payable endpoints.
+    """
+    routes_summary = [
+        {
+            "path":        r["path"],
+            "method":      r["method"],
+            "description": r["description"],
+            "price_usdc":  PRICING.get(r["operation"], {"amount": "0.001"})["amount"],
+            "price_unit":  PRICING.get(r["operation"], {"unit": "per request"})["unit"],
+        }
+        for r in BAZAAR_ROUTES
+    ]
+    return JSONResponse(content={
+        "service":     "FilX.io",
+        "tagline":     "The x402 File Primitive for AI Agents",
+        "version":     "0.2.0",
+        "x402Version": X402_VERSION,
+        "network":     BASE_NETWORK,
+        "asset":       USDC_BASE,
+        "payTo":       TREASURY_ADDRESS,
+        "currency":    "USDC",
+        "docsUrl":     "https://filx.io/docs",
+        "discoveryUrl":"https://api.filx.io/discovery/resources",
+        "swaggerUrl":  "https://api.filx.io/docs",
+        "routes":      routes_summary,
+        "totalRoutes": len(routes_summary),
+    })
 
 
 # ── Wallet Proxy Schemas ──────────────────────────────────────────────────────
