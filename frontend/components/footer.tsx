@@ -60,12 +60,21 @@ export function Footer() {
             >
               hello@filx.io
             </a>
-            <p className="font-mono text-xs text-slate-600 pt-2">
-              © 2026 FilX · MIT License
-            </p>
-            <p className="font-mono text-[10px] text-slate-700 leading-relaxed">
-              The x402 File Primitive. Use responsibly.
-            </p>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="pt-6 border-t border-white/[0.06] flex flex-col sm:flex-row items-center justify-between gap-2">
+          <p className="font-mono text-[10px] text-slate-600">
+            © 2026 FILX.io All Rights Reserved.
+          </p>
+          <div className="flex items-center gap-4">
+            <a href="/terms" className="font-mono text-[10px] text-slate-600 hover:text-slate-300 transition-colors">
+              Terms of Use
+            </a>
+            <a href="/privacy" className="font-mono text-[10px] text-slate-600 hover:text-slate-300 transition-colors">
+              Privacy Policy
+            </a>
           </div>
         </div>
 
