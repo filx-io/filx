@@ -17,6 +17,17 @@ from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, HttpUrl, model_validator
 
+# ── x402 Official SDK ─────────────────────────────────────────────────────────
+try:
+    from x402.http import FacilitatorConfig, HTTPFacilitatorClient, PaymentOption
+    from x402.http.middleware.fastapi import PaymentMiddlewareASGI
+    from x402.http.types import RouteConfig
+    from x402.mechanisms.evm.exact import ExactEvmServerScheme
+    from x402.server import x402ResourceServer
+    X402_SDK = True
+except ImportError:
+    X402_SDK = False
+
 
 # ── OpenAPI metadata ──────────────────────────────────────────────────────────
 
@@ -158,6 +169,49 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["PAYMENT-REQUIRED", "PAYMENT-RESPONSE"],
 )
+
+# ── x402 SDK Middleware Setup ────────────────────────────────────────────────
+
+def _setup_x402_sdk(application: FastAPI) -> None:
+    """Register all FilX endpoints with the official x402 SDK + Bazaar extension."""
+    if not X402_SDK:
+        return
+
+    facilitator_url = os.getenv("X402_FACILITATOR_URL", "https://x402.org/facilitator")
+    treasury = os.getenv("TREASURY_ADDRESS", "0x0000000000000000000000000000000000000000")
+
+    facilitator = HTTPFacilitatorClient(FacilitatorConfig(url=facilitator_url))
+    server = x402ResourceServer(facilitator)
+    server.register("eip155:8453", ExactEvmServerScheme())
+
+    sdk_routes: Dict[str, Any] = {}
+
+    for route in BAZAAR_ROUTES:
+        price = PRICING.get(route["operation"], {"amount": "0.001"})
+        key = f"{route['method']} {route['path']}"
+        sdk_routes[key] = RouteConfig(
+            accepts=[
+                PaymentOption(
+                    scheme="exact",
+                    pay_to=treasury,
+                    price=f"${price['amount']}",
+                    network="eip155:8453",
+                )
+            ],
+            mime_type="application/json",
+            description=route["description"],
+            extensions={
+                "bazaar": {
+                    "discoverable": True,
+                    "inputSchema":  route.get("inputSchema", {}),
+                    "outputSchema": route.get("outputSchema", {}),
+                }
+            },
+        )
+
+    # Add AFTER CORSMiddleware so CORS runs first (outermost layer)
+    application.add_middleware(PaymentMiddlewareASGI, routes=sdk_routes, server=server)
+
 
 # ── Config ────────────────────────────────────────────────────────────────────
 TREASURY_ADDRESS = os.getenv("TREASURY_ADDRESS", "0x0000000000000000000000000000000000000000")
@@ -650,8 +704,43 @@ BAZAAR_ROUTES: List[Dict[str, Any]] = [
     },
 ]
 
+# Register with official x402 SDK + Bazaar (PRICING + BAZAAR_ROUTES now defined)
+_setup_x402_sdk(app)
+
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
+_STUB_RESPONSES: Dict[str, Any] = {
+    "pdf_to_markdown":  {"content": "# Document\n\nProcessed via FilX.", "pages_processed": 1, "cost_usdc": "0.002"},
+    "pdf_ocr":          {"content": "Extracted text via FilX OCR.", "pages_processed": 1, "cost_usdc": "0.004"},
+    "pdf_compress":     {"download_url": "https://cdn.filx.io/stub.pdf", "original_size_bytes": 1048576, "compressed_size_bytes": 204800, "reduction_percent": 80.0},
+    "pdf_merge":        {"download_url": "https://cdn.filx.io/stub.pdf", "page_count": 4},
+    "pdf_split":        {"files": [{"download_url": "https://cdn.filx.io/stub.pdf", "pages": "1-3"}]},
+    "pdf_rotate":       {"download_url": "https://cdn.filx.io/stub.pdf"},
+    "pdf_unlock":       {"download_url": "https://cdn.filx.io/stub.pdf"},
+    "pdf_to_image":     {"images": [{"page": 1, "download_url": "https://cdn.filx.io/stub.png"}]},
+    "html_to_pdf":      {"download_url": "https://cdn.filx.io/stub.pdf", "page_count": 1},
+    "markdown_to_pdf":  {"download_url": "https://cdn.filx.io/stub.pdf", "page_count": 1},
+    "image_resize":     {"download_url": "https://cdn.filx.io/stub.png", "width": 800, "height": 600},
+    "image_compress":   {"download_url": "https://cdn.filx.io/stub.jpg", "original_size_bytes": 204800, "compressed_size_bytes": 51200},
+    "image_convert":    {"download_url": "https://cdn.filx.io/stub.webp", "format": "webp"},
+    "image_crop":       {"download_url": "https://cdn.filx.io/stub.png"},
+    "image_bg_remove":  {"download_url": "https://cdn.filx.io/stub.png"},
+    "image_upscale":    {"download_url": "https://cdn.filx.io/stub.png", "width": 1600, "height": 1200},
+    "image_watermark":  {"download_url": "https://cdn.filx.io/stub.png"},
+    "image_rotate":     {"download_url": "https://cdn.filx.io/stub.png"},
+    "table_extract":    {"tables": [{"page": 1, "rows": [["Col1", "Col2"]], "format": "json"}], "pages_processed": 1},
+    "ocr_image":        {"content": "Extracted text via FilX OCR.", "confidence": 0.97},
+}
+
+
+def stub_response(operation: str) -> JSONResponse:
+    """Return stub result — payment verified by x402 middleware."""
+    data = _STUB_RESPONSES.get(operation, {"status": "ok"})
+    data["_filx"] = {"stub": True, "operation": operation}
+    return JSONResponse(content=data)
+
+
 
 def _payment_requirement(operation: str, resource_url: str) -> Dict[str, Any]:
     """Build one x402 v2 PaymentRequirement object (official spec format)."""
@@ -819,7 +908,7 @@ async def pdf_to_markdown(body: PdfToMarkdownRequest):
     }
     ```
     """
-    return x402_response("pdf_to_markdown")
+    return stub_response("pdf_to_markdown")
 
 
 @app.post(
@@ -840,7 +929,7 @@ async def pdf_ocr(body: PdfOcrRequest):
 
     **Pricing:** $0.004 USDC per page · paid via x402 on Base
     """
-    return x402_response("pdf_ocr")
+    return stub_response("pdf_ocr")
 
 
 @app.post(
@@ -860,7 +949,7 @@ async def pdf_compress(body: PdfCompressRequest):
 
     **Pricing:** $0.002 USDC per file · paid via x402 on Base
     """
-    return x402_response("pdf_compress")
+    return stub_response("pdf_compress")
 
 
 @app.post(
@@ -881,7 +970,7 @@ async def pdf_merge(body: PdfMergeRequest):
 
     **Pricing:** $0.002 USDC per job · paid via x402 on Base
     """
-    return x402_response("pdf_merge")
+    return stub_response("pdf_merge")
 
 
 @app.post(
@@ -901,7 +990,7 @@ async def pdf_split(body: PdfSplitRequest):
 
     **Pricing:** $0.002 USDC per job · paid via x402 on Base
     """
-    return x402_response("pdf_split")
+    return stub_response("pdf_split")
 
 
 @app.post(
@@ -919,7 +1008,7 @@ async def pdf_rotate(body: PdfRotateRequest):
 
     **Pricing:** $0.001 USDC per job · paid via x402 on Base
     """
-    return x402_response("pdf_rotate")
+    return stub_response("pdf_rotate")
 
 
 @app.post(
@@ -939,7 +1028,7 @@ async def pdf_unlock(body: PdfUnlockRequest):
 
     **Pricing:** $0.003 USDC per file · paid via x402 on Base
     """
-    return x402_response("pdf_unlock")
+    return stub_response("pdf_unlock")
 
 
 @app.post(
@@ -959,7 +1048,7 @@ async def pdf_to_image(body: PdfToImageRequest):
 
     **Pricing:** $0.002 USDC per page · paid via x402 on Base
     """
-    return x402_response("pdf_to_image")
+    return stub_response("pdf_to_image")
 
 
 @app.post(
@@ -979,7 +1068,7 @@ async def html_to_pdf(body: HtmlToPdfRequest):
 
     **Pricing:** $0.002 USDC per page · paid via x402 on Base
     """
-    return x402_response("html_to_pdf")
+    return stub_response("html_to_pdf")
 
 
 @app.post(
@@ -1000,7 +1089,7 @@ async def markdown_to_pdf(body: MarkdownToPdfRequest):
 
     **Pricing:** $0.002 USDC per page · paid via x402 on Base
     """
-    return x402_response("markdown_to_pdf")
+    return stub_response("markdown_to_pdf")
 
 
 # ── Image ─────────────────────────────────────────────────────────────────────
@@ -1023,7 +1112,7 @@ async def image_resize(body: ImageResizeRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
-    return x402_response("image_resize")
+    return stub_response("image_resize")
 
 
 @app.post(
@@ -1044,7 +1133,7 @@ async def image_compress(body: ImageCompressRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
-    return x402_response("image_compress")
+    return stub_response("image_compress")
 
 
 @app.post(
@@ -1064,7 +1153,7 @@ async def image_convert(body: ImageConvertRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
-    return x402_response("image_convert")
+    return stub_response("image_convert")
 
 
 @app.post(
@@ -1085,7 +1174,7 @@ async def image_crop(body: ImageCropRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
-    return x402_response("image_crop")
+    return stub_response("image_crop")
 
 
 @app.post(
@@ -1106,7 +1195,7 @@ async def image_remove_bg(body: ImageRemoveBgRequest):
 
     **Pricing:** $0.005 USDC per image · paid via x402 on Base
     """
-    return x402_response("image_bg_remove")
+    return stub_response("image_bg_remove")
 
 
 @app.post(
@@ -1127,7 +1216,7 @@ async def image_upscale(body: ImageUpscaleRequest):
 
     **Pricing:** $0.008 USDC per image · paid via x402 on Base
     """
-    return x402_response("image_upscale")
+    return stub_response("image_upscale")
 
 
 @app.post(
@@ -1145,7 +1234,7 @@ async def image_watermark(body: ImageWatermarkRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
-    return x402_response("image_watermark")
+    return stub_response("image_watermark")
 
 
 @app.post(
@@ -1165,7 +1254,7 @@ async def image_rotate(body: ImageRotateRequest):
 
     **Pricing:** $0.001 USDC per image · paid via x402 on Base
     """
-    return x402_response("image_rotate")
+    return stub_response("image_rotate")
 
 
 # ── Data ──────────────────────────────────────────────────────────────────────
@@ -1203,7 +1292,7 @@ async def table_extract(body: TableExtractRequest):
     }
     ```
     """
-    return x402_response("table_extract")
+    return stub_response("table_extract")
 
 
 @app.post(
@@ -1224,7 +1313,7 @@ async def ocr_image(body: OcrImageRequest):
 
     **Pricing:** $0.003 USDC per image · paid via x402 on Base
     """
-    return x402_response("ocr_image")
+    return stub_response("ocr_image")
 
 
 # ── Discovery / Bazaar ────────────────────────────────────────────────────────

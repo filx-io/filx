@@ -24,6 +24,9 @@ pydantic==2.10.3
 pydantic-settings==2.7.0
 email-validator==2.2.0
 
+# ── x402 Payment Protocol (official SDK) ─────────────────────
+x402[all]==2.2.0
+
 # ── Crypto / Web3 (x402 payment verification) ────────────────
 web3==7.6.0
 eth-account==0.13.4
