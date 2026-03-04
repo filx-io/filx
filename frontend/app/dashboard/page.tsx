@@ -4,8 +4,8 @@ import { Footer } from "@/components/footer";
 import { ExternalLink, FileText, Zap, Clock, Code2, Shield } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Dashboard | FiLX",
-  description: "FiLX agent dashboard — API overview, pricing, and job history.",
+  title: "Dashboard | FilX",
+  description: "FilX agent dashboard — API overview, pricing, and job history.",
 };
 
 const ENDPOINTS = [
@@ -41,7 +41,7 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="space-y-2">
           <p className="font-mono text-[#3b82f6] text-xs uppercase tracking-widest font-bold">// dashboard</p>
-          <h1 className="font-mono font-black text-slate-100 text-2xl uppercase tracking-widest">FiLX API</h1>
+          <h1 className="font-mono font-black text-slate-100 text-2xl uppercase tracking-widest">FilX API</h1>
           <p className="font-mono text-slate-500 text-sm">Base URL: <code className="text-[#3b82f6]">https://api.filx.io</code></p>
         </div>
 
@@ -68,7 +68,7 @@ export default function DashboardPage() {
           <p className="font-mono text-xs text-slate-400 leading-relaxed">
             <strong className="text-green-400">No API key needed.</strong>{" "}
             Authentication is handled via the <strong className="text-slate-200">x402 protocol</strong> — pay per request with USDC on Base.
-            Use your <strong className="text-slate-200">FiLX agent wallet</strong> for signing (no private key exposure).
+            Use your <strong className="text-slate-200">FilX agent wallet</strong> for signing (no private key exposure).
             See <a href="https://filx.io/docs" className="text-[#3b82f6] hover:text-white transition-colors">filx.io/docs</a> for full integration guide.
           </p>
         </div>

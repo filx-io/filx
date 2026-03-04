@@ -24,7 +24,7 @@ KEY = os.environ["FILX_API_KEY"]  # filx login → filx api-key
 res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
     json={"url": "https://example.com/document.pdf"})
 
-# Step 2 — FiLX wallet signs the payment (no private key needed)
+# Step 2 — FilX wallet signs the payment (no private key needed)
 if res.status_code == 402:
     payment_req = res.headers["PAYMENT-REQUIRED"]
 
@@ -53,7 +53,7 @@ const res = await fetch(\`\${API}/api/v1/pdf/to-markdown\`, {
   body: JSON.stringify({ url: "https://example.com/document.pdf" }),
 });
 
-// Step 2 — FiLX wallet signs the payment (no private key in code)
+// Step 2 — FilX wallet signs the payment (no private key in code)
 if (res.status === 402) {
   const paymentRequired = res.headers.get("PAYMENT-REQUIRED");
   const { payment_signature } = await fetch(\`\${API}/api/v1/wallet/sign\`, {
@@ -73,7 +73,7 @@ if (res.status === 402) {
   console.log(data.cost_usdc); // → "0.008"
 }`,
 
-  cli: `# Install FiLX CLI once
+  cli: `# Install FilX CLI once
 npm install -g @filx/cli
 
 # Login — creates your agent wallet (Privy embedded wallet)
@@ -271,7 +271,7 @@ function LangTabs({ active, onChange }: { active: Lang; onChange: (l: Lang) => v
   const tabs: { id: Lang; label: string }[] = [
     { id: "python",     label: "Python" },
     { id: "javascript", label: "JavaScript" },
-    { id: "cli",        label: "FiLX CLI" },
+    { id: "cli",        label: "FilX CLI" },
   ];
   return (
     <div className="flex gap-0 border-b border-white/[0.06]">
@@ -373,7 +373,7 @@ export default function LaunchPage() {
               {[
                 { icon: Shield,       text: "No private key exposure" },
                 { icon: CheckCircle2, text: "Embedded agent wallet" },
-                { icon: CheckCircle2, text: "One API, everything FiLX" },
+                { icon: CheckCircle2, text: "One API, everything FilX" },
               ].map((item) => (
                 <div key={item.text} className="flex items-center gap-1.5 font-mono text-xs text-slate-500 border border-white/10 px-3 py-1.5 bg-[#0d0f17]">
                   <item.icon className="w-3 h-3 text-green-400" />
@@ -400,7 +400,7 @@ export default function LaunchPage() {
                 <CopyBtn text={`npm install -g @filx/cli\nfilx login you@example.com\nexport FILX_API_KEY=$(filx api-key)`} label="Copy" />
               </div>
               <div className="bg-[#060709] px-5 py-4">
-                <pre className="font-mono text-xs text-slate-400 leading-relaxed">{`# Install FiLX CLI once
+                <pre className="font-mono text-xs text-slate-400 leading-relaxed">{`# Install FilX CLI once
 npm install -g @filx/cli
 
 # Login — creates an embedded wallet for your agent (via Privy)
@@ -435,7 +435,7 @@ filx balance`}</pre>
               </div>
               <p className="font-mono text-xs text-slate-400 leading-relaxed">
                 Private keys in code are a security risk — leaked to logs, git history, or CI/CD systems.
-                FiLX gives your agent a <strong className="text-slate-200">Privy embedded wallet</strong> with a secure,
+                FilX gives your agent a <strong className="text-slate-200">Privy embedded wallet</strong> with a secure,
                 server-side key. Your agent authenticates with <code className="text-[#3b82f6]">FILX_API_KEY</code> —
                 a rotatable API credential that never exposes the underlying wallet.
               </p>
@@ -458,7 +458,7 @@ filx balance`}</pre>
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
-                  { name: "FiLX CLI",        desc: "Check your wallet address, send USDC directly.",             cmd: "filx whoami   # shows your wallet address\n# send USDC on Base to this address" },
+                  { name: "FilX CLI",        desc: "Check your wallet address, send USDC directly.",             cmd: "filx whoami   # shows your wallet address\n# send USDC on Base to this address" },
                   { name: "Coinbase",         desc: "Buy USDC on Coinbase and withdraw to your wallet.",          cmd: "# Coinbase → Withdraw → Base network\n# Paste your wallet address" },
                   { name: "Bridge from ETH",  desc: "Already have ETH on Base? Swap to USDC on-chain.",          cmd: "filx prompt \"swap $5 ETH to USDC on Base\"" },
                 ].map((opt) => (
@@ -530,7 +530,7 @@ filx balance`}</pre>
                     className={`font-mono text-[10px] px-3 py-1.5 border transition-colors capitalize ${
                       lang === l ? "border-[#3b82f6] text-[#3b82f6] bg-[#3b82f6]/10" : "border-white/10 text-slate-600 hover:text-slate-300"
                     }`}>
-                    {l === "cli" ? "FiLX CLI" : l}
+                    {l === "cli" ? "FilX CLI" : l}
                   </button>
                 ))}
               </div>

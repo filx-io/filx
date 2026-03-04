@@ -11,11 +11,11 @@ import httpx, os
 API = "https://api.filx.io"
 KEY = os.environ["FILX_API_KEY"]  # filx login → filx api-key
 
-# Step 1 — call FiLX
+# Step 1 — call FilX
 res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
     json={"url": "https://example.com/document.pdf"})
 
-# Step 2 — FiLX wallet signs the payment (no private key in code)
+# Step 2 — FilX wallet signs the payment (no private key in code)
 if res.status_code == 402:
     signed = httpx.post(f"{API}/api/v1/wallet/sign",
         headers={"Authorization": f"Bearer {KEY}"},
@@ -33,14 +33,14 @@ if res.status_code == 402:
 const API = "https://api.filx.io";
 const KEY = process.env.FILX_API_KEY; // filx login → filx api-key
 
-// Step 1 — call FiLX
+// Step 1 — call FilX
 const res = await fetch(\`\${API}/api/v1/pdf/to-markdown\`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ url: "https://example.com/doc.pdf" }),
 });
 
-// Step 2 — FiLX wallet signs the payment (no private key in code)
+// Step 2 — FilX wallet signs the payment (no private key in code)
 if (res.status === 402) {
   const paymentRequired = res.headers.get("PAYMENT-REQUIRED");
   const { payment_signature } = await fetch(\`\${API}/api/v1/wallet/sign\`, {
@@ -60,7 +60,7 @@ if (res.status === 402) {
   console.log(result.cost_usdc); // → "0.008"
 }`,
 
-  cli: `# Install FiLX CLI once
+  cli: `# Install FilX CLI once
 npm install -g @filx/cli
 
 # Login — creates embedded agent wallet (no private key)
@@ -82,7 +82,7 @@ curl -i -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
 # → HTTP/2 402
 # → PAYMENT-REQUIRED: eyJzY2hlbWUiOiJleGFjdCIs...
 
-# Step 2: Sign with FiLX CLI
+# Step 2: Sign with FilX CLI
 SIGNED=$(filx sign-x402 "eyJzY2hlbWUiOiJleGFjdCIs...")
 
 # Step 3: Resend with payment proof
@@ -98,7 +98,7 @@ type Lang = keyof typeof SNIPPETS;
 const TAB_LABELS: Record<Lang, string> = {
   python:     "Python",
   javascript: "JavaScript",
-  cli:        "FiLX CLI",
+  cli:        "FilX CLI",
   curl:       "cURL",
 };
 
@@ -125,7 +125,7 @@ export function AgentSnippet() {
             Built for AI Agents
           </h2>
           <p className="font-mono text-slate-500 text-sm">
-            No private keys in your code. Your agent wallet signs payments — one API, everything FiLX.
+            No private keys in your code. Your agent wallet signs payments — one API, everything FilX.
           </p>
         </div>
 
@@ -180,7 +180,7 @@ export function AgentSnippet() {
               {lang === "python" && "pip install httpx  ·  export FILX_API_KEY=$(filx api-key)"}
               {lang === "javascript" && "native fetch only — no npm packages needed  ·  export FILX_API_KEY=$(filx api-key)"}
               {lang === "cli" && "npm install -g @filx/cli  ·  filx login you@example.com"}
-              {lang === "curl" && "requires: FiLX CLI for signing  ·  filx sign-x402 <header>"}
+              {lang === "curl" && "requires: FilX CLI for signing  ·  filx sign-x402 <header>"}
             </span>
             <a href="https://filx.io/docs" className="font-mono text-[10px] text-[#3b82f6] hover:text-white transition-colors flex-shrink-0">
               filx.io/docs →
