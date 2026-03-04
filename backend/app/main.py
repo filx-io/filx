@@ -222,7 +222,10 @@ def _setup_x402_sdk(application: FastAPI) -> None:
                         and path.startswith("/api/v1/")
                         and path not in ("/api/v1/pricing", "/api/v1/stats")
                     )
-                    if is_protected and b"payment-signature" not in headers:
+                    _fkey = os.getenv("FILX_API_KEY", "")
+                    _req_key = headers.get(b"x-filx-api-key", b"").decode()
+                    _api_key_valid = bool(_fkey and _req_key == _fkey)
+                    if is_protected and b"payment-signature" not in headers and not _api_key_valid:
                         # Use BAZAAR_ROUTES map; fall back to path-derived key
                         operation = self._path_op.get(
                             path,
@@ -300,8 +303,25 @@ def _setup_x402_sdk(application: FastAPI) -> None:
             },
         )
 
+    # ── API key bypass wrapper ────────────────────────────────────────────────
+    _filx_api_key = os.getenv("FILX_API_KEY", "")
+
+    class _APIKeyOrX402Middleware:
+        """Allows requests with valid X-FilX-API-Key to bypass x402 payment."""
+        def __init__(self, inner_app: Any) -> None:
+            self._inner = inner_app
+            self._x402 = PaymentMiddlewareASGI(inner_app, routes=sdk_routes, server=server)
+
+        async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
+            if scope["type"] == "http" and _filx_api_key:
+                hdrs = {k: v for k, v in scope.get("headers", [])}
+                if hdrs.get(b"x-filx-api-key", b"").decode() == _filx_api_key:
+                    await self._inner(scope, receive, send)
+                    return
+            await self._x402(scope, receive, send)
+
     # Add AFTER CORSMiddleware so CORS runs first (outermost layer)
-    application.add_middleware(PaymentMiddlewareASGI, routes=sdk_routes, server=server)
+    application.add_middleware(_APIKeyOrX402Middleware)
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
