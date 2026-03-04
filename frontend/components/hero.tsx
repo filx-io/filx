@@ -42,7 +42,7 @@ export function Hero() {
         {/* Body */}
         <p className="font-mono text-slate-500 text-sm md:text-base leading-relaxed max-w-2xl mx-auto">
           Today&apos;s AI agents can think, reason, and code — but they can&apos;t process files independently.
-          FliX gives agents the ability to convert, extract, and transform any document or image,
+          FiLX gives agents the ability to convert, extract, and transform any document or image,
           paying per-use with USDC on Base chain via the x402 protocol.
         </p>
 

@@ -10,7 +10,7 @@ const INTEGRATIONS = [
   },
   {
     icon: "🤖",
-    name: "FliX Wallet",
+    name: "FiLX Wallet",
     role: "Agent Wallet",
     desc: "Embedded wallet built for agents. Natural language payment signing. No private key management required.",
     href: "https://filx.io/docs#wallet",
@@ -21,7 +21,7 @@ const INTEGRATIONS = [
     icon: "🔵",
     name: "Base Chain",
     role: "Settlement Layer",
-    desc: "Ethereum L2 by Coinbase. Fast, cheap USDC transactions. Every FliX payment settles on-chain.",
+    desc: "Ethereum L2 by Coinbase. Fast, cheap USDC transactions. Every FiLX payment settles on-chain.",
     href: "https://base.org",
     badge: "L2 · USDC",
     badgeColor: "text-blue-400 border-blue-400/30",
@@ -30,7 +30,7 @@ const INTEGRATIONS = [
     icon: "🔧",
     name: "MCP",
     role: "Tool Protocol",
-    desc: "Native Model Context Protocol tool manifest included. Plug FliX directly into Claude, GPT, Gemini agents.",
+    desc: "Native Model Context Protocol tool manifest included. Plug FiLX directly into Claude, GPT, Gemini agents.",
     href: "https://modelcontextprotocol.io",
     badge: "NATIVE SUPPORT",
     badgeColor: "text-green-400 border-green-400/30",
@@ -67,7 +67,7 @@ export function Integrations() {
             Integrations
           </h2>
           <p className="font-mono text-slate-500 text-sm max-w-xl mx-auto">
-            FliX plugs into the agent stack you already use.
+            FiLX plugs into the agent stack you already use.
           </p>
         </div>
 

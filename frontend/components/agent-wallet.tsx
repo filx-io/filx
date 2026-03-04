@@ -3,14 +3,14 @@ import { ExternalLink, Shield } from "lucide-react";
 const PAYMENT_OPTIONS = [
   {
     icon: "🔐",
-    title: "FliX Agent Wallet",
-    desc: "Recommended. FliX creates an embedded wallet for your agent via Privy. No private key ever touches your code. Authenticate with FILX_API_KEY.",
+    title: "FiLX Agent Wallet",
+    desc: "Recommended. FiLX creates an embedded wallet for your agent via Privy. No private key ever touches your code. Authenticate with FILX_API_KEY.",
     tag: "Recommended",
     href: "https://filx.io/docs#wallet",
   },
   {
     icon: "🤖",
-    title: "FliX CLI",
+    title: "FiLX CLI",
     desc: "Natural language conversions. 'filx prompt: convert doc.pdf to markdown'. Zero code — ideal for scripted agents and pipelines.",
     tag: "Zero Code",
     href: "https://filx.io/docs",
@@ -24,11 +24,11 @@ const PAYMENT_OPTIONS = [
 ];
 
 const HOW_IT_WORKS = [
-  "Agent calls FliX API → gets HTTP 402 with PAYMENT-REQUIRED header (amount, recipient, job_id)",
+  "Agent calls FiLX API → gets HTTP 402 with PAYMENT-REQUIRED header (amount, recipient, job_id)",
   "Agent POSTs PAYMENT-REQUIRED to api.filx.io/api/v1/wallet/sign with FILX_API_KEY",
-  "FliX wallet signs the USDC payment using a Privy embedded wallet (no private key in code)",
-  "Agent resubmits to FliX with PAYMENT-SIGNATURE header containing signed payload",
-  "FliX verifies on-chain payment and processes the file → 200 OK + result",
+  "FiLX wallet signs the USDC payment using a Privy embedded wallet (no private key in code)",
+  "Agent resubmits to FiLX with PAYMENT-SIGNATURE header containing signed payload",
+  "FiLX verifies on-chain payment and processes the file → 200 OK + result",
 ];
 
 export function AgentWallet() {
@@ -45,7 +45,7 @@ export function AgentWallet() {
               Get Your Agent Wallet
             </h2>
             <p className="font-mono text-slate-400 text-sm leading-relaxed max-w-2xl">
-              FliX payments are <strong className="text-slate-200">fully autonomous</strong> — no wallet popups,
+              FiLX payments are <strong className="text-slate-200">fully autonomous</strong> — no wallet popups,
               no private keys in code. Your agent authenticates with a{" "}
               <code className="text-[#3b82f6]">FILX_API_KEY</code> and we handle signing via{" "}
               <strong className="text-slate-200">Privy embedded wallets</strong>.

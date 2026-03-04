@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "FliX — x402 File Primitive";
+export const alt = "FiLX — x402 File Primitive";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -46,7 +46,7 @@ export default function OgImage() {
           {/* Title */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8 }}>
             <div style={{ fontSize: 72, fontWeight: 900, color: "#f1f5f9", letterSpacing: -2, lineHeight: 1, textTransform: "uppercase" }}>
-              FliX
+              FiLX
             </div>
             <div style={{ fontSize: 22, fontWeight: 700, color: "#3b82f6", letterSpacing: 4, textTransform: "uppercase" }}>
               x402 File Primitive
@@ -81,7 +81,7 @@ export default function OgImage() {
           padding: "16px 48px", display: "flex", justifyContent: "space-between", alignItems: "center",
         }}>
           <div style={{ fontSize: 13, color: "#334155", letterSpacing: 2 }}>filx.io</div>
-          <div style={{ fontSize: 12, color: "#334155", letterSpacing: 1 }}>Powered by x402 · FliX Wallet · Base</div>
+          <div style={{ fontSize: 12, color: "#334155", letterSpacing: 1 }}>Powered by x402 · FiLX Wallet · Base</div>
         </div>
       </div>
     ),

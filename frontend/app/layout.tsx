@@ -7,7 +7,7 @@ import { Toaster } from "sonner";
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: { default: "FliX — x402 File Primitive", template: "%s | FliX" },
+  title: { default: "FiLX — x402 File Primitive", template: "%s | FiLX" },
   description:
     "The x402 File Primitive for AI agents. PDF→Markdown, OCR, Image Convert, Background Remove, Table Extract — 20+ endpoints. No API keys. No accounts. Pay per use with USDC on Base.",
   keywords: [
@@ -27,21 +27,21 @@ export const metadata: Metadata = {
     "filx",
     "filx.io",
   ],
-  authors: [{ name: "FliX", url: "https://filx.io" }],
-  creator: "FliX",
+  authors: [{ name: "FiLX", url: "https://filx.io" }],
+  creator: "FiLX",
   openGraph: {
     type: "website",
     locale: "en_US",
     url: "https://filx.io",
-    title: "FliX — x402 File Primitive",
+    title: "FiLX — x402 File Primitive",
     description:
       "The x402 File Primitive for AI agents. 20+ file conversion endpoints. No API keys — pay per use with USDC on Base.",
-    siteName: "FliX",
+    siteName: "FiLX",
     images: [{ url: "https://filx.io/opengraph-image", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "FliX — x402 File Primitive",
+    title: "FiLX — x402 File Primitive",
     description:
       "The x402 File Primitive for AI agents. 20+ file conversion endpoints. No API keys — pay per use with USDC on Base.",
     creator: "@filx_io",

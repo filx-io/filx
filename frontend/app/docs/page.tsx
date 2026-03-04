@@ -574,7 +574,7 @@ export default function DocsPage() {
               // documentation
             </p>
             <h1 className="font-mono font-black text-slate-100 text-3xl md:text-4xl uppercase tracking-widest">
-              FliX API Reference
+              FiLX API Reference
             </h1>
             <p className="font-mono text-slate-500 text-sm">
               20 endpoints. No API keys. USDC micropayments on Base via x402 protocol.
@@ -621,8 +621,8 @@ export default function DocsPage() {
             <div ref={setRef("overview")} id="overview" className="space-y-6 scroll-mt-24">
               <SectionHeading id="overview" label="Overview" />
               <p className="font-mono text-slate-400 text-sm leading-relaxed max-w-2xl">
-                FliX is a file conversion API built natively for AI agents. Unlike traditional APIs that require sign-up, API keys, and credit top-ups,
-                FliX uses the{" "}
+                FiLX is a file conversion API built natively for AI agents. Unlike traditional APIs that require sign-up, API keys, and credit top-ups,
+                FiLX uses the{" "}
                 <a href="https://x402.org" target="_blank" rel="noopener noreferrer" className="text-[#3b82f6] hover:text-white transition-colors">
                   x402 protocol
                 </a>{" "}
@@ -675,7 +675,7 @@ export default function DocsPage() {
                   {
                     icon: FileText,
                     title: "URL-Based Input",
-                    body: "FliX fetches files from publicly accessible URLs — no multipart upload required. Your agent can pass any public HTTPS URL. Direct binary upload is not supported.",
+                    body: "FiLX fetches files from publicly accessible URLs — no multipart upload required. Your agent can pass any public HTTPS URL. Direct binary upload is not supported.",
                   },
                   {
                     icon: Lock,
@@ -707,7 +707,7 @@ export default function DocsPage() {
               <SectionHeading id="x402" label="x402 Protocol" />
               <p className="font-mono text-slate-400 text-sm leading-relaxed max-w-2xl">
                 x402 is an open standard by Coinbase for machine-to-machine micropayments over HTTP.
-                Every FliX endpoint returns <code className="text-yellow-400">HTTP 402</code> on the first request, then accepts payment and processes on the second.
+                Every FiLX endpoint returns <code className="text-yellow-400">HTTP 402</code> on the first request, then accepts payment and processes on the second.
               </p>
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -737,7 +737,7 @@ PAYMENT-REQUIRED: eyJzY2hlbWUi...
                   },
                   {
                     n: "03", title: "PAY + 200 OK", color: "text-green-400",
-                    desc: "Agent resends with signed payment. FliX verifies on-chain.",
+                    desc: "Agent resends with signed payment. FiLX verifies on-chain.",
                     code: `POST /api/v1/pdf/to-markdown
 PAYMENT-SIGNATURE: eyJ0eEhhc2gi...
 
@@ -797,7 +797,7 @@ PAYMENT-RESPONSE: eyJzZXR0bGVk...
   "network":   "base",
   "currency":  "USDC",
   "amount":    "2000",          // in USDC micro-units (6 decimals) → $0.002
-  "recipient": "0x742d...8e1f", // FliX treasury address
+  "recipient": "0x742d...8e1f", // FiLX treasury address
   "job_id":    "job_abc123"     // include in payment memo
 }`} />
               </div>
@@ -817,14 +817,14 @@ PAYMENT-RESPONSE: eyJzZXR0bGVk...
                   <div className="space-y-1">
                     <p className="font-mono font-bold text-green-400 text-xs">No private keys required</p>
                     <p className="font-mono text-xs text-slate-400 leading-relaxed">
-                      FliX provides an embedded agent wallet — your agent authenticates with a{" "}
+                      FiLX provides an embedded agent wallet — your agent authenticates with a{" "}
                       <code className="text-[#3b82f6]">FILX_API_KEY</code> and the wallet signs payments server-side.
                       Secured by <strong className="text-slate-300">Privy embedded wallets</strong> — private key never in your code.
                     </p>
                   </div>
                 </div>
 
-                <CodeBlock lang="Setup — FliX CLI (run once)" code={`# Install FliX CLI
+                <CodeBlock lang="Setup — FiLX CLI (run once)" code={`# Install FiLX CLI
 npm install -g @filx/cli
 
 # Login — creates an embedded wallet for your agent via Privy
@@ -843,11 +843,11 @@ import httpx, os
 API = "https://api.filx.io"
 KEY = os.environ["FILX_API_KEY"]  # filx login → filx api-key
 
-# Step 1 — call FliX (get 402 payment request)
+# Step 1 — call FiLX (get 402 payment request)
 res = httpx.post(f"{API}/api/v1/pdf/to-markdown",
     json={"url": "https://example.com/document.pdf"})
 
-# Step 2 — FliX wallet signs the payment (no private key needed)
+# Step 2 — FiLX wallet signs the payment (no private key needed)
 if res.status_code == 402:
     payment_req = res.headers["PAYMENT-REQUIRED"]
     signed = httpx.post(f"{API}/api/v1/wallet/sign",
@@ -867,14 +867,14 @@ if res.status_code == 402:
 const API = "https://api.filx.io";
 const KEY = process.env.FILX_API_KEY; // filx login → filx api-key
 
-// Step 1 — call FliX
+// Step 1 — call FiLX
 const res = await fetch(\`\${API}/api/v1/pdf/to-markdown\`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({ url: "https://example.com/doc.pdf" }),
 });
 
-// Step 2 — FliX wallet signs the payment (no private key in code)
+// Step 2 — FiLX wallet signs the payment (no private key in code)
 if (res.status === 402) {
   const { payment_signature } = await fetch(\`\${API}/api/v1/wallet/sign\`, {
     method: "POST",
@@ -891,7 +891,7 @@ if (res.status === 402) {
   // { content: "# Document Title\\n\\n...", pages_processed: 4, cost_usdc: "0.008" }
 }`} />
 
-                <CodeBlock lang="FliX CLI — zero code needed" code={`# Install FliX CLI once
+                <CodeBlock lang="FiLX CLI — zero code needed" code={`# Install FiLX CLI once
 npm install -g @filx/cli && filx login you@example.com
 
 # Natural language file conversion — pays automatically
@@ -905,7 +905,7 @@ curl -i -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
 # → HTTP 402 Payment Required
 # → PAYMENT-REQUIRED: eyJzY2hlbWUiOiJleGFjdCIsIm5...
 
-# Step 2: Sign with FliX CLI and resend
+# Step 2: Sign with FiLX CLI and resend
 SIGNED=$(filx sign-x402 "eyJzY2hlbWUiOiJleGFjdCIsIm5...")
 curl -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
   -H "Content-Type: application/json" \\
@@ -923,10 +923,10 @@ curl -X POST https://api.filx.io/api/v1/pdf/to-markdown \\
                 {/* SDK cards */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {[
-                    { name: "FliX CLI",             desc: "Recommended. No private key. Agent wallet via Privy. npm install -g @filx/cli",  badge: "⭐ Recommended",             href: "https://filx.io/docs",             lang: "Any" },
+                    { name: "FiLX CLI",             desc: "Recommended. No private key. Agent wallet via Privy. npm install -g @filx/cli",  badge: "⭐ Recommended",             href: "https://filx.io/docs",             lang: "Any" },
                     { name: "Native fetch / httpx", desc: "No packages needed — call api.filx.io/wallet/sign directly with FILX_API_KEY.", badge: "Zero Dependencies",          href: "#quickstart",                      lang: "JS/Python" },
                     { name: "x402 JS/TS SDK",       desc: "wrapFetch wrapper — pair with FILX_API_KEY or your own wallet.",               badge: "npm install @x402/fetch",    href: "https://github.com/coinbase/x402", lang: "JS/TS" },
-                    { name: "MCP Tool Manifest",    desc: "Plug FliX into Claude, GPT, Gemini via MCP natively.",                        badge: "Native MCP",                  href: "https://api.filx.io/mcp",          lang: "MCP" },
+                    { name: "MCP Tool Manifest",    desc: "Plug FiLX into Claude, GPT, Gemini via MCP natively.",                        badge: "Native MCP",                  href: "https://api.filx.io/mcp",          lang: "MCP" },
                     { name: "LangChain / LangGraph","desc": "Python pipeline agents — use httpx + FILX_API_KEY for signing.",             badge: "Python",                      href: "https://www.langchain.com",        lang: "Python" },
                     { name: "Any HTTP Client",      desc: "curl, httpx, fetch, axios — zero SDK. Use api.filx.io/wallet/sign.",           badge: "Universal",                   href: "#quickstart",                      lang: "Any" },
                   ].map((sdk) => (
@@ -993,7 +993,7 @@ print(result["markdown"][:500])`} />
   }
 }
 
-// Claude can now call FliX tools natively:
+// Claude can now call FiLX tools natively:
 // "Convert this PDF to markdown" → calls filx.pdf_to_markdown
 // "Remove the background from this image" → calls filx.image_remove_bg
 // Payment is handled automatically via x402 + your configured wallet`} />

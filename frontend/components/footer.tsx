@@ -11,12 +11,12 @@ export function Footer() {
             <div className="flex items-center gap-2.5">
               <Image
                 src="/assets/logo.jpg"
-                alt="FliX"
+                alt="FiLX"
                 width={28}
                 height={28}
                 className="rounded-sm"
               />
-              <span className="font-mono font-bold text-slate-200 text-lg tracking-wider">FliX</span>
+              <span className="font-mono font-bold text-slate-200 text-lg tracking-wider">FiLX</span>
             </div>
             <p className="font-mono text-slate-600 text-xs leading-relaxed">
               The x402 File Primitive for AI agents.<br />
@@ -67,7 +67,7 @@ export function Footer() {
               hello@filx.io
             </a>
             <p className="font-mono text-xs text-slate-600 pt-2">
-              © 2026 FliX · MIT License
+              © 2026 FiLX · MIT License
             </p>
             <p className="font-mono text-[10px] text-slate-700 leading-relaxed">
               The x402 File Primitive. Use responsibly.

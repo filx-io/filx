@@ -14,7 +14,7 @@ const STATS = [
   {
     stat: "Day 1",
     label: "x402 Adoption",
-    desc: "Coinbase's x402 protocol launched in 2024. FliX is one of the first production services built on it.",
+    desc: "Coinbase's x402 protocol launched in 2024. FiLX is one of the first production services built on it.",
     color: "text-yellow-400",
   },
 ];
@@ -33,7 +33,7 @@ export function MarketOpportunity() {
           </h2>
           <p className="font-mono text-slate-500 text-sm max-w-xl mx-auto">
             AI agents are proliferating faster than the infrastructure built to support them.
-            FliX is purpose-built for what comes next.
+            FiLX is purpose-built for what comes next.
           </p>
         </div>
 

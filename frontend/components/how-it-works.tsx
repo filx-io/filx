@@ -29,7 +29,7 @@ PAYMENT-REQUIRED: eyJzY2hlbWUi...
     n: "03",
     title: "PAY + 200 OK",
     tagColor: "text-green-400",
-    summary: "Agent resends request with PAYMENT-SIGNATURE header. FliX verifies on-chain and returns the converted file.",
+    summary: "Agent resends request with PAYMENT-SIGNATURE header. FiLX verifies on-chain and returns the converted file.",
     code: `POST /api/v1/pdf/to-markdown HTTP/1.1
 PAYMENT-SIGNATURE: eyJ0eEhhc2gi...
 

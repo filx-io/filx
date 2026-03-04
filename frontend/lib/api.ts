@@ -1,5 +1,5 @@
 /**
- * FliX.io — API client helpers
+ * FiLX.io — API client helpers
  * Base URL: https://api.filx.io
  */
 
