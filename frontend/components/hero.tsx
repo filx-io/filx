@@ -58,7 +58,7 @@ export function Hero() {
             <ArrowRight className="w-4 h-4" />
           </a>
           <a
-            href="https://github.com/filx-io/web"
+            href="https://github.com/filx-io/filx"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-2.5 border border-white/10 text-slate-300 font-mono font-semibold text-sm tracking-wide hover:border-white/25 hover:text-white transition-colors"

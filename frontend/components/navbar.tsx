@@ -58,7 +58,7 @@ export function Navbar() {
 
             {/* GitHub */}
             <a
-              href="https://github.com/filx-io/web"
+              href="https://github.com/filx-io/filx"
               target="_blank"
               rel="noopener noreferrer"
               className="font-mono text-xs text-slate-500 hover:text-slate-200 transition-colors flex items-center gap-1.5"

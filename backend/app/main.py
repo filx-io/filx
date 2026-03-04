@@ -138,7 +138,7 @@ app = FastAPI(
     },
     license_info={
         "name": "MIT",
-        "url": "https://github.com/filx-io/web/blob/main/LICENSE",
+        "url": "https://github.com/filx-io/filx/blob/main/LICENSE",
     },
     servers=[
         {"url": "https://api.filx.io", "description": "Production"},
