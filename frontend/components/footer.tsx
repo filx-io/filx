@@ -29,6 +29,7 @@ export function Footer() {
             <div className="flex flex-col gap-2.5">
               {[
                 { label: "Docs",           href: "https://filx.io/docs" },
+                { label: "Live Stats",     href: "https://filx.io/stats" },
                 { label: "Launch App",     href: "https://app.filx.io" },
                 { label: "GitHub",         href: "https://github.com/filx-io/filx" },
                 { label: "X / Twitter",    href: "https://x.com/filx_io" },
