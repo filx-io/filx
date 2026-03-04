@@ -9,7 +9,7 @@ import {
   Users,
   Zap,
   FileText,
-  Image,
+  Image as ImageIcon,
   Database,
   RefreshCw,
   TrendingUp,
@@ -313,7 +313,7 @@ export default function StatsPage() {
                 <div className="border border-white/10 bg-[#0d0f17] p-5 space-y-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-slate-500">
-                      <Image className="w-4 h-4 text-yellow-400" />
+                      <ImageIcon className="w-4 h-4 text-yellow-400" />
                       Image
                     </div>
                     <span className="font-mono font-black text-xl text-slate-100">

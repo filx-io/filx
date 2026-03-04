@@ -409,7 +409,7 @@ function CopyButton({ text, small }: { text: string; small?: boolean }) {
 
 function SectionHeading({ id, label, count }: { id: string; label: string; count?: number }) {
   return (
-    <div className="flex items-center gap-3">
+    <div id={id} className="flex items-center gap-3">
       <div className="w-1 h-6 bg-[#3b82f6]" />
       <h2 className="font-mono font-black text-slate-200 text-xl uppercase tracking-widest">{label}</h2>
       {count !== undefined && (
