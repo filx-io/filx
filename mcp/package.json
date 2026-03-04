@@ -1,0 +1,50 @@
+{
+  "name": "@filx/mcp",
+  "version": "0.1.0",
+  "description": "FilX MCP server — x402-native file processing tools for AI agents. PDF, image, OCR, and more. Agents pay per use with USDC on Base.",
+  "keywords": [
+    "filx",
+    "mcp",
+    "x402",
+    "ai",
+    "agent",
+    "pdf",
+    "image",
+    "ocr",
+    "usdc",
+    "base"
+  ],
+  "homepage": "https://filx.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/filx-io/filx"
+  },
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "filx-mcp": "./dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx src/index.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "@x402/evm": "^2.5.0",
+    "@x402/fetch": "^2.5.0",
+    "viem": "^2.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
