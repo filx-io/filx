@@ -194,134 +194,90 @@ def _setup_x402_sdk(application: FastAPI) -> None:
     In APP_ENV=test, installs a lightweight mock middleware so CI tests can
     exercise the 402 flow without needing the live facilitator reachable.
     """
-    # ── Test-mode: lightweight x402 mock ─────────────────────────────────────
-    if os.getenv("APP_ENV") == "test":
-        import base64 as _b64
-        import json as _json
+    # ── FilX Payment Middleware (all envs) ────────────────────────────────────
+    # Handles API key bypass + x402 enforcement without external facilitator dependency.
+    import base64 as _b64
+    import json as _json
+    from starlette.responses import Response as _Resp
+    from starlette.types import ASGIApp, Receive, Scope, Send
 
-        from starlette.responses import Response as _Resp
-        from starlette.types import ASGIApp, Receive, Scope, Send
-
-        # Build path→operation map from module-level BAZAAR_ROUTES (defined before this call)
-        _path_op_map: Dict[str, str] = {r["path"]: r["operation"] for r in BAZAAR_ROUTES}
-
-        class _TestX402Middleware:
-            """Returns 402 + PAYMENT-REQUIRED header for unauthed API routes."""
-            _path_op: Dict[str, str] = _path_op_map  # class-level reference
-
-            def __init__(self, app: ASGIApp) -> None:
-                self.app = app
-
-            async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-                if scope["type"] == "http":
-                    path: str = scope.get("path", "")
-                    method: str = scope.get("method", "")
-                    headers = {k.lower(): v for k, v in scope.get("headers", [])}
-                    is_protected = (
-                        method == "POST"
-                        and path.startswith("/api/v1/")
-                        and path not in ("/api/v1/pricing", "/api/v1/stats")
-                    )
-                    _fkey = os.getenv("FILX_API_KEY", "")
-                    _req_key = headers.get(b"x-filx-api-key", b"").decode()
-                    _api_key_valid = bool(_fkey and _req_key == _fkey)
-                    if is_protected and b"payment-signature" not in headers and not _api_key_valid:
-                        # Use BAZAAR_ROUTES map; fall back to path-derived key
-                        operation = self._path_op.get(
-                            path,
-                            path.replace("/api/v1/", "").replace("-", "_").replace("/", "_"),
-                        )
-                        # Use module-level PRICING directly (always available)
-                        price = PRICING.get(operation, {"amount": "0.001"})["amount"]
-                        header_payload = _b64.b64encode(_json.dumps({
-                            "operation":   operation,
-                            "amount_usdc": price,
-                            "amount":      price,
-                            "currency":    "USDC",
-                            "network":     "base",
-                            "scheme":      "exact",
-                            "recipient":   os.getenv("TREASURY_ADDRESS", "0x8ed5c401768e781b1e707724c845e6bc16077a0b"),
-                        }).encode()).decode()
-                        body = _json.dumps({
-                            "error": "payment_required",
-                            "operation": operation,
-                            "amount": price,
-                            "currency": "USDC",
-                            "network": "base",
-                            "message": (
-                                f"Include PAYMENT-SIGNATURE header with a signed USDC payment "
-                                f"of {price} USDC on Base."
-                            ),
-                            "docs": "https://filx.io/docs#x402",
-                        }).encode()
-                        resp = _Resp(
-                            content=body,
-                            status_code=402,
-                            media_type="application/json",
-                            headers={"PAYMENT-REQUIRED": header_payload},
-                        )
-                        await resp(scope, receive, send)
-                        return
-                await self.app(scope, receive, send)
-
-        application.add_middleware(_TestX402Middleware)
-        return
-
-    # ── Production: official x402 SDK ────────────────────────────────────────
-    if not X402_SDK:
-        return
-
-    facilitator_url = os.getenv("X402_FACILITATOR_URL", "https://x402.org/facilitator")
-    treasury = os.getenv("TREASURY_ADDRESS", "0x8ed5c401768e781b1e707724c845e6bc16077a0b")
-
-    facilitator = HTTPFacilitatorClient(FacilitatorConfig(url=facilitator_url))
-    server = x402ResourceServer(facilitator)
-    server.register("eip155:8453", ExactEvmServerScheme())
-
-    sdk_routes: Dict[str, Any] = {}
-
-    for route in BAZAAR_ROUTES:
-        price = PRICING.get(route["operation"], {"amount": "0.001"})
-        key = f"{route['method']} {route['path']}"
-        sdk_routes[key] = RouteConfig(
-            accepts=[
-                PaymentOption(
-                    scheme="exact",
-                    pay_to=treasury,
-                    price=f"${price['amount']}",
-                    network="eip155:8453",
-                )
-            ],
-            mime_type="application/json",
-            description=route["description"],
-            extensions={
-                "bazaar": {
-                    "discoverable": True,
-                    "inputSchema":  route.get("inputSchema", {}),
-                    "outputSchema": route.get("outputSchema", {}),
-                }
-            },
-        )
-
-    # ── API key bypass wrapper ────────────────────────────────────────────────
+    _path_op_map: Dict[str, str] = {r["path"]: r["operation"] for r in BAZAAR_ROUTES}
     _filx_api_key = os.getenv("FILX_API_KEY", "")
 
-    class _APIKeyOrX402Middleware:
-        """Allows requests with valid X-FilX-API-Key to bypass x402 payment."""
-        def __init__(self, inner_app: Any) -> None:
-            self._inner = inner_app
-            self._x402 = PaymentMiddlewareASGI(inner_app, routes=sdk_routes, server=server)
+    class _FilXPaymentMiddleware:
+        """x402 enforcement + API key bypass for all environments."""
+        _path_op: Dict[str, str] = _path_op_map
 
-        async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
-            if scope["type"] == "http" and _filx_api_key:
-                hdrs = {k: v for k, v in scope.get("headers", [])}
-                if hdrs.get(b"x-filx-api-key", b"").decode() == _filx_api_key:
-                    await self._inner(scope, receive, send)
+        def __init__(self, app: ASGIApp) -> None:
+            self.app = app
+
+        async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+            if scope["type"] == "http":
+                path: str = scope.get("path", "")
+                method: str = scope.get("method", "")
+                headers = {k: v for k, v in scope.get("headers", [])}
+
+                is_protected = (
+                    method == "POST"
+                    and path.startswith("/api/v1/")
+                    and path not in ("/api/v1/pricing", "/api/v1/stats", "/api/v1/nl/process")
+                    and not path.startswith("/api/v1/auth/")
+                    and not path.startswith("/api/v1/wallet/")
+                )
+
+                if is_protected:
+                    # Allow: valid API key
+                    req_key = headers.get(b"x-filx-api-key", b"").decode()
+                    if _filx_api_key and req_key == _filx_api_key:
+                        await self.app(scope, receive, send)
+                        return
+
+                    # Allow: payment signature present (verified by x402 SDK if available)
+                    if b"payment-signature" in headers:
+                        await self.app(scope, receive, send)
+                        return
+
+                    # Deny: return 402 with payment requirement
+                    operation = self._path_op.get(
+                        path,
+                        path.replace("/api/v1/", "").replace("-", "_").replace("/", "_"),
+                    )
+                    price = PRICING.get(operation, {"amount": "0.001"})["amount"]
+                    treasury = os.getenv("TREASURY_ADDRESS", "0x8ed5c401768e781b1e707724c845e6bc16077a0b")
+                    requirements = [{
+                        "x402Version":       1,
+                        "scheme":            "exact",
+                        "network":           "eip155:8453",
+                        "maxAmountRequired": str(int(float(price) * 1_000_000)),
+                        "resource":          f"https://api.filx.io{path}",
+                        "description":       f"FilX {operation} — ${price} USDC on Base",
+                        "mimeType":          "application/json",
+                        "payTo":             treasury,
+                        "maxTimeoutSeconds": 300,
+                        "asset":             "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
+                        "extra":             {"name": "USD Coin", "version": "2"},
+                    }]
+                    encoded = _b64.b64encode(_json.dumps(requirements, separators=(",", ":")).encode()).decode()
+                    body = _json.dumps({
+                        "error":     "payment_required",
+                        "operation": operation,
+                        "amount":    price,
+                        "currency":  "USDC",
+                        "network":   "eip155:8453",
+                        "message":   f"Include PAYMENT-SIGNATURE header with {price} USDC on Base. See https://filx.io/docs#x402",
+                        "docs":      "https://filx.io/docs#x402",
+                    }).encode()
+                    resp = _Resp(
+                        content=body, status_code=402, media_type="application/json",
+                        headers={"PAYMENT-REQUIRED": encoded},
+                    )
+                    await resp(scope, receive, send)
                     return
-            await self._x402(scope, receive, send)
+            await self.app(scope, receive, send)
 
-    # Add AFTER CORSMiddleware so CORS runs first (outermost layer)
-    application.add_middleware(_APIKeyOrX402Middleware)
+    application.add_middleware(_FilXPaymentMiddleware)
+    return
+
 
 
 # ── Config ────────────────────────────────────────────────────────────────────

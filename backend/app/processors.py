@@ -28,11 +28,10 @@ API_BASE_URL = os.getenv("API_BASE_URL", "https://api.filx.io")
 async def download_file(url: str, suffix: str = "") -> Path:
     """Download file from URL into /tmp/uploads. Returns local path."""
     if not suffix:
-        # Try to guess extension from URL
         url_path = url.split("?")[0]
         suffix = Path(url_path).suffix or ".bin"
     dest = UPLOADS_DIR / f"{uuid.uuid4().hex}{suffix}"
-    async with httpx.AsyncClient(timeout=60, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=60, follow_redirects=True, verify=False) as client:
         resp = await client.get(url)
         resp.raise_for_status()
         dest.write_bytes(resp.content)
