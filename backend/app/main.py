@@ -174,7 +174,78 @@ app.add_middleware(
 # ── x402 SDK Middleware Setup ────────────────────────────────────────────────
 
 def _setup_x402_sdk(application: FastAPI) -> None:
-    """Register all FilX endpoints with the official x402 SDK + Bazaar extension."""
+    """Register all FilX endpoints with the official x402 SDK + Bazaar extension.
+
+    In APP_ENV=test, installs a lightweight mock middleware so CI tests can
+    exercise the 402 flow without needing the live facilitator reachable.
+    """
+    # ── Test-mode: lightweight x402 mock ─────────────────────────────────────
+    if os.getenv("APP_ENV") == "test":
+        import base64 as _b64
+        import json as _json
+
+        from starlette.responses import Response as _Resp
+        from starlette.types import ASGIApp, Receive, Scope, Send
+
+        _pricing_ref = PRICING   # captured at call time
+        _path_to_op  = {r["path"]: r["operation"] for r in BAZAAR_ROUTES}  # e.g. "/api/v1/image/remove-bg" → "image_bg_remove"
+
+        class _TestX402Middleware:
+            """Returns 402 + PAYMENT-REQUIRED header for unauthed API routes."""
+            def __init__(self, app: ASGIApp) -> None:
+                self.app = app
+
+            async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
+                if scope["type"] == "http":
+                    path: str = scope.get("path", "")
+                    method: str = scope.get("method", "")
+                    headers = {k.lower(): v for k, v in scope.get("headers", [])}
+                    is_protected = (
+                        method == "POST"
+                        and path.startswith("/api/v1/")
+                        and path not in ("/api/v1/pricing", "/api/v1/stats")
+                    )
+                    if is_protected and b"payment-signature" not in headers:
+                        operation = _path_to_op.get(
+                            path,
+                            path.replace("/api/v1/", "").replace("-", "_").replace("/", "_"),
+                        )
+                        price = _pricing_ref.get(operation, {"amount": "0.001"})["amount"]
+                        header_payload = _b64.b64encode(_json.dumps({
+                            "operation":   operation,
+                            "amount_usdc": price,
+                            "amount":      price,
+                            "currency":    "USDC",
+                            "network":     "base",
+                            "scheme":      "exact",
+                            "recipient":   os.getenv("TREASURY_ADDRESS", "0x0000000000000000000000000000000000000000"),
+                        }).encode()).decode()
+                        body = _json.dumps({
+                            "error": "payment_required",
+                            "operation": operation,
+                            "amount": price,
+                            "currency": "USDC",
+                            "network": "base",
+                            "message": (
+                                f"Include PAYMENT-SIGNATURE header with a signed USDC payment "
+                                f"of {price} USDC on Base."
+                            ),
+                            "docs": "https://filx.io/docs#x402",
+                        }).encode()
+                        resp = _Resp(
+                            content=body,
+                            status_code=402,
+                            media_type="application/json",
+                            headers={"PAYMENT-REQUIRED": header_payload},
+                        )
+                        await resp(scope, receive, send)
+                        return
+                await self.app(scope, receive, send)
+
+        application.add_middleware(_TestX402Middleware)
+        return
+
+    # ── Production: official x402 SDK ────────────────────────────────────────
     if not X402_SDK:
         return
 
