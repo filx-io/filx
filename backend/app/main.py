@@ -187,11 +187,13 @@ def _setup_x402_sdk(application: FastAPI) -> None:
         from starlette.responses import Response as _Resp
         from starlette.types import ASGIApp, Receive, Scope, Send
 
-        _pricing_ref = PRICING   # captured at call time
-        _path_to_op  = {r["path"]: r["operation"] for r in BAZAAR_ROUTES}  # e.g. "/api/v1/image/remove-bg" → "image_bg_remove"
+        # Build path→operation map from module-level BAZAAR_ROUTES (defined before this call)
+        _path_op_map: Dict[str, str] = {r["path"]: r["operation"] for r in BAZAAR_ROUTES}
 
         class _TestX402Middleware:
             """Returns 402 + PAYMENT-REQUIRED header for unauthed API routes."""
+            _path_op: Dict[str, str] = _path_op_map  # class-level reference
+
             def __init__(self, app: ASGIApp) -> None:
                 self.app = app
 
@@ -206,11 +208,13 @@ def _setup_x402_sdk(application: FastAPI) -> None:
                         and path not in ("/api/v1/pricing", "/api/v1/stats")
                     )
                     if is_protected and b"payment-signature" not in headers:
-                        operation = _path_to_op.get(
+                        # Use BAZAAR_ROUTES map; fall back to path-derived key
+                        operation = self._path_op.get(
                             path,
                             path.replace("/api/v1/", "").replace("-", "_").replace("/", "_"),
                         )
-                        price = _pricing_ref.get(operation, {"amount": "0.001"})["amount"]
+                        # Use module-level PRICING directly (always available)
+                        price = PRICING.get(operation, {"amount": "0.001"})["amount"]
                         header_payload = _b64.b64encode(_json.dumps({
                             "operation":   operation,
                             "amount_usdc": price,
