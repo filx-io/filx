@@ -9,6 +9,7 @@ import { AllTools } from "@/components/all-tools";
 import { AgentSnippet } from "@/components/agent-snippet";
 import { UseCases } from "@/components/use-cases";
 import { Integrations } from "@/components/integrations";
+import { PrimToken } from "@/components/prim-token";
 import { MarketOpportunity } from "@/components/market-opportunity";
 import { Security } from "@/components/security";
 import { Footer } from "@/components/footer";
@@ -27,6 +28,7 @@ export default function HomePage() {
       <AgentSnippet />
       <UseCases />
       <Integrations />
+      <PrimToken />
       <MarketOpportunity />
       <Security />
       <Footer />
