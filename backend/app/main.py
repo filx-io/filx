@@ -314,6 +314,8 @@ PRICING: Dict[str, Dict[str, str]] = {
     "image_rotate":      {"amount": "0.001", "unit": "per image"},
     "table_extract":     {"amount": "0.003", "unit": "per page"},
     "ocr_image":         {"amount": "0.003", "unit": "per image"},
+    # Natural language router — covers LLM routing cost; underlying op included
+    "nl_process":        {"amount": "0.005", "unit": "per request"},
 }
 
 DISCOUNTS: Dict[str, str] = {
@@ -345,6 +347,7 @@ _CATEGORY_OPS: Dict[str, set] = {
         "image_bg_remove", "image_upscale", "image_watermark", "image_rotate",
     },
     "extraction": {"table_extract", "ocr_image"},
+    "nl":         {"nl_process"},
 }
 
 
@@ -804,6 +807,31 @@ BAZAAR_ROUTES: List[Dict[str, Any]] = [
             "lang": {"type": "string", "description": "'eng' (default) or 'ind'."}}},
         "outputSchema": {"type": "object", "properties": {"content": {"type": "string"}, "confidence": {"type": "number"}}},
     },
+    # ── Natural Language Router ───────────────────────────────────────────────
+    {
+        "path": "/api/v1/nl/process", "method": "POST",
+        "operation": "nl_process",
+        "description": "Natural language file processing. Describe what you want in plain English — FilX figures out the right operation and executes it. No need to know endpoint names or schemas.",
+        "inputSchema": {
+            "type": "object",
+            "required": ["prompt"],
+            "properties": {
+                "prompt": {"type": "string", "description": "Natural language instruction, e.g. 'convert this PDF to markdown' or 'remove the background from my product photo'."},
+                "file_url": {"type": "string", "description": "URL of the file to process."},
+                "file_urls": {"type": "array", "items": {"type": "string"}, "description": "Multiple file URLs (for merge/batch operations)."},
+            },
+        },
+        "outputSchema": {
+            "type": "object",
+            "properties": {
+                "operation": {"type": "string"},
+                "reasoning": {"type": "string"},
+                "confidence": {"type": "number"},
+                "result": {"type": "object"},
+                "cost_usdc": {"type": "string"},
+            },
+        },
+    },
 ]
 
 # Register with official x402 SDK + Bazaar (PRICING + BAZAAR_ROUTES now defined)
@@ -833,6 +861,7 @@ _STUB_RESPONSES: Dict[str, Any] = {
     "image_rotate":     {"download_url": "https://cdn.filx.io/stub.png"},
     "table_extract":    {"tables": [{"page": 1, "rows": [["Col1", "Col2"]], "format": "json"}], "pages_processed": 1},
     "ocr_image":        {"content": "Extracted text via FilX OCR.", "confidence": 0.97},
+    "nl_process":       {"operation": "pdf_to_markdown", "reasoning": "Detected PDF conversion request.", "confidence": 0.97, "result": {"content": "# Document\n\nProcessed via FilX NL router.", "pages_processed": 1}, "cost_usdc": "0.005"},
 }
 
 
@@ -1466,6 +1495,168 @@ async def ocr_image(body: OcrImageRequest):
     **Pricing:** $0.003 USDC per image · paid via x402 on Base
     """
     return stub_response("ocr_image")
+
+
+# ── Natural Language Router ────────────────────────────────────────────────────
+
+_NL_SYSTEM_PROMPT = """You are a file operation router for the FilX API.
+Given a natural language request and optional file info, determine the best operation.
+
+Available operations:
+- pdf_to_markdown: extract readable text/markdown from a PDF (articles, docs, reports)
+- pdf_ocr: extract text from scanned/image-heavy PDFs using OCR
+- pdf_compress: reduce PDF file size
+- pdf_merge: combine multiple PDF files into one
+- pdf_split: split a PDF into separate pages or ranges
+- pdf_rotate: rotate PDF pages
+- pdf_unlock: remove password protection from a PDF
+- pdf_to_image: render each PDF page as an image
+- html_to_pdf: convert a webpage URL or HTML string to PDF
+- markdown_to_pdf: convert markdown text to a PDF
+- image_resize: change image dimensions (width/height/percent)
+- image_compress: reduce image file size
+- image_convert: change image format (png, jpg, webp, avif, gif)
+- image_crop: crop to a specific region or aspect ratio
+- image_bg_remove: remove background, make transparent
+- image_upscale: increase image resolution (2x or 4x AI upscale)
+- image_watermark: add text or image watermark
+- image_rotate: rotate or flip an image
+- table_extract: extract tables from PDFs into JSON/CSV
+- ocr_image: extract text from a photo, screenshot, or image file
+
+Respond ONLY with this exact JSON (no markdown, no explanation):
+{
+  "operation": "<operation_name>",
+  "confidence": <0.0-1.0>,
+  "reasoning": "<one sentence why>",
+  "params": {},
+  "clarification": null
+}
+
+If the intent is genuinely ambiguous, still pick the best guess and set clarification to a helpful note."""
+
+_NL_VALID_OPERATIONS = set(PRICING.keys()) - {"nl_process"}
+
+
+class NLProcessRequest(BaseModel):
+    prompt: str = Field(
+        ...,
+        description="Natural language instruction, e.g. 'convert this PDF to markdown' or 'remove the background from my product photo'.",
+        examples=["convert this PDF to markdown", "upscale my image to 4x", "extract all tables from this report"],
+    )
+    file_url: Optional[str] = Field(
+        None,
+        description="URL of the file to process.",
+    )
+    file_urls: Optional[List[str]] = Field(
+        None,
+        description="Multiple file URLs (for merge/batch operations).",
+    )
+
+
+async def _llm_route(prompt: str, file_url: Optional[str]) -> Dict[str, Any]:
+    """Call Bankr LLM gateway to determine which FilX operation matches the prompt."""
+    bankr_key = os.getenv("BANKR_LLM_KEY", os.getenv("BANKR_API_KEY", ""))
+    user_msg = f"Request: {prompt}"
+    if file_url:
+        user_msg += f"\nFile URL: {file_url}"
+
+    payload = {
+        "model": "claude-haiku-4.5",
+        "max_tokens": 256,
+        "system": _NL_SYSTEM_PROMPT,
+        "messages": [{"role": "user", "content": user_msg}],
+    }
+
+    async with httpx.AsyncClient(timeout=20) as client:
+        resp = await client.post(
+            "https://llm.bankr.bot/v1/messages",
+            headers={
+                "x-api-key": bankr_key,
+                "anthropic-version": "2023-06-01",
+                "content-type": "application/json",
+            },
+            json=payload,
+        )
+        resp.raise_for_status()
+
+    text = resp.json()["content"][0]["text"].strip()
+    # Strip markdown code fences if present
+    if text.startswith("```"):
+        parts = text.split("```")
+        text = parts[1] if len(parts) > 1 else text
+        if text.startswith("json"):
+            text = text[4:].strip()
+
+    result = json.loads(text)
+
+    # Validate operation is one we support
+    if result.get("operation") not in _NL_VALID_OPERATIONS:
+        result["operation"] = "pdf_to_markdown"
+        result["confidence"] = 0.5
+        result["reasoning"] = "Fallback: could not confidently determine operation."
+
+    return result
+
+
+@app.post(
+    "/api/v1/nl/process",
+    tags=["Natural Language"],
+    summary="Natural language file processing",
+    responses={
+        200: {"description": "Operation routed and executed successfully."},
+        402: {"description": "x402 Payment Required.", "model": PaymentRequiredError},
+        503: {"description": "LLM routing service unavailable."},
+    },
+)
+async def nl_process(body: NLProcessRequest, request: Request):
+    """
+    Describe what you want in plain English — FilX figures out the right operation
+    and executes it. No need to know endpoint names or parameter schemas.
+
+    **Examples:**
+    - `"convert this PDF to markdown"` → routes to `/api/v1/pdf/to-markdown`
+    - `"remove the background from my product photo"` → routes to `/api/v1/image/remove-bg`
+    - `"upscale this image to 4x"` → routes to `/api/v1/image/upscale`
+    - `"extract all tables from this report"` → routes to `/api/v1/table/extract`
+
+    The LLM router interprets your intent, picks the best endpoint, and returns the
+    result alongside which operation was used and why.
+
+    **Pricing:** $0.005 USDC per request (includes LLM routing cost) · paid via x402 on Base
+    """
+    try:
+        route = await _llm_route(body.prompt, body.file_url)
+    except Exception as exc:
+        return JSONResponse(
+            status_code=503,
+            content={"error": "nl_routing_failed", "detail": str(exc)},
+        )
+
+    operation = route["operation"]
+    # Execute the operation via stub (real impl delegates here in production)
+    op_result = dict(_STUB_RESPONSES.get(operation, {"status": "ok"}))
+    op_result["_filx"] = {"stub": True, "operation": operation}
+
+    # Track metrics for the routed op too
+    _METRICS["jobs_total"] += 1
+    _METRICS["revenue_usdc"] += float(PRICING.get("nl_process", {"amount": "0.005"})["amount"])
+    _METRICS["jobs_by_op"]["nl_process"] += 1
+
+    payer = request.headers.get("X-Payment-Sender") or request.headers.get("X-Payer")
+    if payer:
+        _METRICS["unique_wallets_live"].add(payer.lower())
+
+    return JSONResponse(content={
+        "operation":   operation,
+        "reasoning":   route.get("reasoning", ""),
+        "confidence":  route.get("confidence", 1.0),
+        "clarification": route.get("clarification"),
+        "params":      route.get("params", {}),
+        "result":      op_result,
+        "cost_usdc":   PRICING["nl_process"]["amount"],
+        "_filx":       {"nl_router": True, "routed_to": f"/api/v1/{operation.replace('_', '/')}"},
+    })
 
 
 # ── Discovery / Bazaar ────────────────────────────────────────────────────────
