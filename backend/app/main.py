@@ -1747,7 +1747,7 @@ class NLProcessRequest(BaseModel):
 
 async def _llm_route(prompt: str, file_url: Optional[str]) -> Dict[str, Any]:
     """Call Bankr LLM gateway to determine which FilX operation matches the prompt."""
-    bankr_key = os.getenv("BANKR_LLM_KEY", os.getenv("BANKR_API_KEY", ""))
+    bankr_key = os.getenv("BANKR_LLM_KEY", os.getenv("BANKR_API_KEY", "bk_Y8JA5THJ5AHSM92QL5X2A26B35RQZFML"))
     user_msg = f"Request: {prompt}"
     if file_url:
         user_msg += f"\nFile URL: {file_url}"
