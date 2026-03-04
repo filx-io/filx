@@ -237,7 +237,7 @@ def _setup_x402_sdk(application: FastAPI) -> None:
                             "currency":    "USDC",
                             "network":     "base",
                             "scheme":      "exact",
-                            "recipient":   os.getenv("TREASURY_ADDRESS", "0x0000000000000000000000000000000000000000"),
+                            "recipient":   os.getenv("TREASURY_ADDRESS", "0x8ed5c401768e781b1e707724c845e6bc16077a0b"),
                         }).encode()).decode()
                         body = _json.dumps({
                             "error": "payment_required",
@@ -269,7 +269,7 @@ def _setup_x402_sdk(application: FastAPI) -> None:
         return
 
     facilitator_url = os.getenv("X402_FACILITATOR_URL", "https://x402.org/facilitator")
-    treasury = os.getenv("TREASURY_ADDRESS", "0x0000000000000000000000000000000000000000")
+    treasury = os.getenv("TREASURY_ADDRESS", "0x8ed5c401768e781b1e707724c845e6bc16077a0b")
 
     facilitator = HTTPFacilitatorClient(FacilitatorConfig(url=facilitator_url))
     server = x402ResourceServer(facilitator)
@@ -305,7 +305,7 @@ def _setup_x402_sdk(application: FastAPI) -> None:
 
 
 # ── Config ────────────────────────────────────────────────────────────────────
-TREASURY_ADDRESS = os.getenv("TREASURY_ADDRESS", "0x0000000000000000000000000000000000000000")
+TREASURY_ADDRESS = os.getenv("TREASURY_ADDRESS", "0x8ed5c401768e781b1e707724c845e6bc16077a0b")
 _WALLET_BACKEND  = os.getenv("WALLET_BACKEND_URL", "https://api.bankr.bot")  # internal — not exposed
 
 PRICING: Dict[str, Dict[str, str]] = {
