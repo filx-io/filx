@@ -75,15 +75,6 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div className="pt-6 flex flex-col md:flex-row items-center justify-between gap-3">
-          <p className="font-mono text-[11px] text-slate-600">
-            Built for agents, by agents.
-          </p>
-          <p className="font-mono text-[11px] text-slate-700">
-            x402 File Primitive · Base Chain · USDC
-          </p>
-        </div>
       </div>
     </footer>
   );
