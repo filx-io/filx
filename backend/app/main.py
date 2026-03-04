@@ -1022,11 +1022,21 @@ def _wallet_headers(request: Request) -> Dict[str, str]:
     return headers
 
 
+def _parse_wallet_response(res: httpx.Response) -> JSONResponse:
+    """Return JSON response; fall back to text body if upstream returns non-JSON."""
+    try:
+        content = res.json()
+    except Exception:
+        text = res.text or "upstream returned non-JSON response"
+        content = {"error": "upstream_error", "message": text, "status": res.status_code}
+    return JSONResponse(status_code=res.status_code, content=content)
+
+
 async def _wallet_post(path: str, body: dict, headers: Dict[str, str]) -> JSONResponse:
     try:
         async with httpx.AsyncClient(timeout=30) as client:
             res = await client.post(f"{_WALLET_BACKEND}{path}", json=body, headers=headers)
-        return JSONResponse(status_code=res.status_code, content=res.json())
+        return _parse_wallet_response(res)
     except httpx.RequestError as exc:
         return JSONResponse(status_code=503, content={"error": "wallet_unavailable", "message": str(exc)})
 
@@ -1035,7 +1045,7 @@ async def _wallet_get(path: str, headers: Dict[str, str]) -> JSONResponse:
     try:
         async with httpx.AsyncClient(timeout=15) as client:
             res = await client.get(f"{_WALLET_BACKEND}{path}", headers=headers)
-        return JSONResponse(status_code=res.status_code, content=res.json())
+        return _parse_wallet_response(res)
     except httpx.RequestError as exc:
         return JSONResponse(status_code=503, content={"error": "wallet_unavailable", "message": str(exc)})
 
