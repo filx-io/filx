@@ -736,7 +736,7 @@ BAZAAR_ROUTES: List[Dict[str, Any]] = [
         "outputSchema": {"type": "object", "properties": {"download_url": {"type": "string"}, "format": {"type": "string"}}},
     },
     {
-        "path": "/api/v1/image/bg-remove", "method": "POST",
+        "path": "/api/v1/image/remove-bg", "method": "POST",
         "operation": "image_bg_remove",
         "description": "Remove background from an image using AI segmentation. Returns PNG with transparency.",
         "inputSchema": _URL_INPUT,
