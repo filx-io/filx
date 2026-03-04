@@ -55,12 +55,6 @@ export function Footer() {
           <div className="space-y-3">
             <h4 className="font-mono text-[10px] text-slate-600 uppercase tracking-widest font-bold">Contact</h4>
             <a
-              href="mailto:investors@filx.io"
-              className="font-mono text-xs text-slate-500 hover:text-slate-200 transition-colors block"
-            >
-              investors@filx.io
-            </a>
-            <a
               href="mailto:hello@filx.io"
               className="font-mono text-xs text-slate-500 hover:text-slate-200 transition-colors block"
             >
